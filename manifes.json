@@ -1,0 +1,19 @@
+{
+      "name": "NG Cash Flow Tracker",
+        "short_name": "NG Tracker",
+          "start_url": "/",
+            "display": "standalone",
+              "background_color": "#2E3440",
+                "theme_color": "#2E3440",
+                  "orientation": "any",
+                    "icons": [
+                        {
+                              "src": "https://cdn-icons-png.flaticon.com/512/2845/2845531.png",
+                                    "sizes": "512x512",
+                                          "type": "image/png",
+                                                "purpose": "any maskable"
+                                                    }
+                                                      ]
+                                                      }
+                                                      
+}
