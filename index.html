@@ -50,8 +50,8 @@ html,body{min-height:100%;background:var(--bg);color:var(--txt);font-family:syst
 .proj-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .proj-tbl{border-collapse:collapse;font-size:10px;white-space:nowrap}
 .proj-tbl .th-g{background:var(--surf2);color:var(--sub);font-size:7px;letter-spacing:2px;text-transform:uppercase;padding:3px 5px;text-align:center;border:1px solid var(--bdr)}
-.proj-tbl .th-c{background:var(--surf);color:var(--sub);font-size:7px;letter-spacing:1px;text-transform:uppercase;padding:4px 5px;text-align:right;border-bottom:1px solid var(--bdr);border-right:1px solid rgba(76,86,106,.3);max-width:70px;overflow:hidden;text-overflow:ellipsis}
-.proj-tbl .th-c:first-child{text-align:left;position:sticky;left:0;background:var(--surf);z-index:5;min-width:72px}
+.proj-tbl .th-c{background:var(--surf);color:var(--sub);font-size:7px;letter-spacing:1px;text-transform:uppercase;padding:4px 5px;text-align:right;border-bottom:1px solid var(--bdr);border-right:1px solid rgba(76,86,106,.3);min-width:44px}
+.proj-tbl .th-month{text-align:left;position:sticky;left:0;background:var(--surf);z-index:5;min-width:72px}
 .proj-tbl td{padding:4px 5px;border-bottom:1px solid rgba(76,86,106,.2);border-right:1px solid rgba(76,86,106,.1);text-align:right;font-family:monospace;font-size:10px}
 .proj-tbl td:first-child{text-align:left;font-family:system-ui;font-size:10px;position:sticky;left:0;background:var(--bg);z-index:4}
 .proj-tbl tr:hover td{background:var(--surf2)}
@@ -110,6 +110,15 @@ canvas{width:100%;border-radius:4px;display:block}
       <tbody id="var-body"></tbody>
     </table>
   </div>
+  <div class="card" style="margin-top:4px">
+    <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Data Sync</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn btn-s" style="margin:0;font-size:10px;padding:9px" onclick="exportData()">Export JSON</button>
+      <button class="btn btn-s" style="margin:0;font-size:10px;padding:9px" onclick="importData()">Import JSON</button>
+    </div>
+    <div style="font-size:9px;color:var(--mute);margin-top:7px;line-height:1.5">Export → copy the JSON → paste into the artifact's Import field (and vice versa) to keep both in sync.</div>
+  </div>
+
 </div>
 
 <!-- PROJECTION -->
@@ -222,7 +231,7 @@ canvas{width:100%;border-radius:4px;display:block}
 
 <script>
 // ── CONSTANTS ─────────────────────────────────────────────────────────────
-var SUKUK=5000000,SUKUK_MTH=72917,ALGHINA_0=6000000,ALGH_RATE=0.175;
+var SUKUK=6000000,SUKUK_MTH=87500,ALGHINA_0=6000000,ALGH_RATE=0.175;
 var MALEK_SEM=Math.round((10070)*55*(1.03));
 var AUC_INST=Math.round(9000*50*(1.03));
 var HOME_BASE=80000,BIZ_BASE=300000,ADAM_Y=250000,SUMMER=26700;
@@ -260,8 +269,8 @@ function buildProj(){
   for(var i=0;i<84;i++){
     var d=new Date(2026,7+i),mo=d.getMonth(),yi=Math.floor(i/12);
     var home=Math.min(Math.round(HOME_BASE*Math.pow(1.1,yi)),120000);
-    var bizQ=Math.min(Math.round(BIZ_BASE*Math.pow(1.1,yi)),500000);
-    var sukuk=i===0?0:SUKUK_MTH;
+    var bizQ=Math.round(BIZ_BASE*Math.pow(1.1,yi)); // uncapped in 7-yr plan
+    var sukuk=SUKUK_MTH; // paid from Aug 2026 (i=0), deposit made Jul 31
     var biz=[0,3,6,9].indexOf(mo)>=0?bizQ:0;
     var intIn=prev,algOpen=bal;
     var adamSch=(yi<=2&&[6,10,1].indexOf(mo)>=0)?Math.round(ADAM_Y/3):0;
@@ -386,7 +395,7 @@ function renderInput(){
     +'<div style="background:var(--surf2);border-radius:5px;padding:8px 10px;margin-bottom:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;font-size:10px">'
       +'<div><div style="font-size:8px;color:var(--sub);text-transform:uppercase;margin-bottom:1px">Total In</div><div style="color:var(--grn);font-family:monospace">'+f(p.totalIn)+'</div></div>'
       +'<div><div style="font-size:8px;color:var(--sub);text-transform:uppercase;margin-bottom:1px">Total Out</div><div style="color:var(--red);font-family:monospace">'+f(p.totalOut)+'</div></div>'
-      +'<div><div style="font-size:8px;color:var(--sub);text-transform:uppercase;margin-bottom:1px">Net</div><div style="color:'+(p.net>=0?'var(--grn)':'var(--red)')+';font-family:monospace">'+(p.net>=0?'+':'')+f(p.net)+'</div></div>'
+      +'<div><div style="font-size:8px;color:var(--sub);text-transform:uppercase;margin-bottom:1px">Net</div><div style="color:'+(p.net>=0?'var(--grn)':'var(--red)')+';font-family:monospace">'+(p.net>0?'+':'')+f(p.net)+'</div></div>'
     +'</div>'
     +'<div class="inp-row req"><label>Al-Ghina Closing Balance <span style="color:var(--purp)">(required)</span></label>'
       +'<input type="text" id="ia" placeholder="e.g. 5,900,000" value="'+(hasVal?Math.round(a.algClose).toLocaleString():'')+'"/></div>'
@@ -423,7 +432,7 @@ function renderProj(){
   var expRules=RULES.filter(function(r){return r.type==='expense';});
   // Build header
   var hg='<tr>'
-    +'<th class="th-c" rowspan="2" style="min-width:72px">Month</th>'
+    +'<th class="th-c th-month" rowspan="2">Month</th>'
     +'<th class="th-g" colspan="'+(4+incRules.length)+'">INCOME</th>'
     +'<th class="th-g" colspan="'+(5+expRules.length)+'">EXPENSES</th>'
     +'<th class="th-g" colspan="3">BALANCE</th>'
@@ -434,7 +443,7 @@ function renderProj(){
     +'<th class="th-c">Home</th><th class="th-c">Education</th><th class="th-c">Summer</th><th class="th-c">Zakah</th>';
   expRules.forEach(function(r){hg+='<th class="th-c" style="color:var(--amb);max-width:60px">'+r.name+'</th>';});
   hg+='<th class="th-c" style="color:var(--red)">Total Out</th>'
-    +'<th class="th-c" style="color:var(--blu)">Net</th>'
+    +'<th class="th-c" style="color:var(--blu);border-left:1px solid var(--bdr)">Net</th>'
     +'<th class="th-c" style="color:var(--blu)">Al-Ghina</th>'
     +'<th class="th-c" style="color:var(--amb)">Total</th></tr>';
   document.getElementById('proj-head').innerHTML=hg;
@@ -443,7 +452,7 @@ function renderProj(){
   var h='';
   for(var i=0;i<84;i++){
     var p=PROJ[i],r=rb[i];
-    if(p.mo===7){h+='<tr class="yr-sep"><td colspan="'+(12+incRules.length+expRules.length)+'">Year '+(p.yi+1)+' &nbsp;('+p.fullLbl+' &rarr; '+PROJ[Math.min(i+11,83)].fullLbl+')</td></tr>';}
+    if(p.mo===7){h+='<tr class="yr-sep"><td colspan="'+(13+incRules.length+expRules.length)+'">Year '+(p.yi+1)+' &nbsp;('+p.fullLbl+' &rarr; '+PROJ[Math.min(i+11,83)].fullLbl+')</td></tr>';}
     var isA=r.hasA;
     var algDisp=isA?r.actual:p.algClose;
     var totDisp=algDisp+SUKUK;
@@ -470,7 +479,7 @@ function renderProj(){
       h+='<td>'+(v?'<span style="color:var(--amb)">'+f(v)+'</span>':'<span class="dim">--</span>')+'</td>';
     });
     var algCls=algDisp<0?' class="neg"':algDisp>0?' class="pos"':'';
-    h+='<td style="color:'+(p.net>=0?'var(--grn)':'var(--red)')+'">'+(p.net>=0?'+':'')+f(p.net)+'</td>'
+    h+='<td style="color:'+(p.net>=0?'var(--grn)':'var(--red)')+'">'+(p.net>0?'+':'')+f(p.net)+'</td>'
       +'<td'+algCls+'>'+f(algDisp)+'</td>'
       +'<td style="color:var(--amb)">'+f(totDisp)+'</td>'
       +'</tr>';
