@@ -1,0 +1,19 @@
+{
+  "name": "NG Cash Flow Tracker",
+  "short_name": "NG CashFlow",
+  "description": "Personal financial tracker and 7-year cash flow projection",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#2E3440",
+  "theme_color": "#2E3440",
+  "start_url": "./index.html",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
