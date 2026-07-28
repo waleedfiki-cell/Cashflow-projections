@@ -1,5 +1,8 @@
 name: Convert HTML to APK
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
