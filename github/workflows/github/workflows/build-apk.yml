@@ -1,0 +1,22 @@
+name: Convert HTML to APK
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Build APK
+        uses: darkshredder/web-to-app-action@main
+        with:
+          build-folder-path: "." # Change to "build" or "dist" if your HTML is in a subfolder
+          app-name: "MyGitHubApp"
+          output-folder-path: "output-apk/"
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Mobile-APK
+          path: output-apk/
