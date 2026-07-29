@@ -367,13 +367,6 @@ function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 var ACT=ld('ng-act-v2',{});
 
 // ── CLOUD SYNC (Firebase Realtime Database) ─────────────────────────────
-// 1. Create a free project at https://console.firebase.google.com
-// 2. Build > Authentication > Sign-in method > enable "Email/Password"
-// 3. Authentication > Users > Add user (one email+password you'll use on both devices)
-// 4. Build > Realtime Database > Create database (start in "locked mode")
-// 5. Rules tab, paste:
-//      { "rules": { "users": { "$uid": { ".read": "auth.uid === $uid", ".write": "auth.uid === $uid" } } } }
-// 6. Project settings (gear icon) > General > "Your apps" > Web app (</>) > copy the config object below
 var firebaseConfig={
   apiKey:"AIzaSyCtJC02fbAJxf8e2ptLW3tQxNXiW36F5xU",
   authDomain:"cashflow-3ece7.firebaseapp.com",
@@ -428,7 +421,7 @@ function attachRemoteListener(){
       applyingRemote=true;
       if(data.SETTINGS){SETTINGS=data.SETTINGS;sv('ng-capital-v1',SETTINGS);applySettings();}
       if(data.ACT){ACT=data.ACT;sv('ng-act-v2',ACT);}
-      if(data.RULES){RULES=data.RULES;sv('ng-rules-v3',RULES);}
+      if(data.RULES){RULES=data.RULES;sv('ng-rules-v3',RULES);healRules();}
       sv('ng-sync-ts',data.ts);
       PROJ=buildProj();
       renderRules();renderAll();
@@ -455,7 +448,7 @@ function setSyncStatus(msg){
 }
 window.addEventListener('load',initSync);
 
-// ── MANUAL EXPORT / IMPORT (backup, or if you skip cloud sync) ──────────
+// ── MANUAL EXPORT / IMPORT ───────────────────────────────────────────────
 function exportData(){
   var blob={SETTINGS:SETTINGS,ACT:ACT,RULES:RULES,exportedAt:new Date().toISOString()};
   var text=JSON.stringify(blob);
@@ -468,23 +461,28 @@ function exportData(){
 }
 function importData(){
   var box=document.getElementById('sync-io-box');
-  box.style.display='block';
-  box.value='';
-  box.placeholder='Paste exported JSON here, then click Import again to apply.';
-  box.focus();
-  box.oninput=function(){box.dataset.pending='1';};
-  if(box.dataset.pending==='1' && box.value.trim()){
-    try{
-      var data=JSON.parse(box.value);
-      if(data.SETTINGS){SETTINGS=data.SETTINGS;sv('ng-capital-v1',SETTINGS);applySettings();}
-      if(data.ACT){ACT=data.ACT;sv('ng-act-v2',ACT);}
-      if(data.RULES){RULES=data.RULES;sv('ng-rules-v3',RULES);}
-      syncPush();
-      PROJ=buildProj();renderRules();renderAll();
-      box.style.display='none';box.dataset.pending='';
-      setSyncStatus('Imported successfully.');
-    }catch(e){alert('Invalid JSON.');}
+  
+  if(box.style.display==='none'||!box.style.display){
+    box.style.display='block';
+    box.value='';
+    box.placeholder='Paste exported JSON here, then click Import JSON again to apply.';
+    box.focus();
+    return;
   }
+  
+  var rawText=box.value.trim();
+  if(!rawText){alert('Please paste valid JSON text first.');return;}
+
+  try{
+    var data=JSON.parse(rawText);
+    if(data.SETTINGS){SETTINGS=data.SETTINGS;sv('ng-capital-v1',SETTINGS);applySettings();}
+    if(data.ACT){ACT=data.ACT;sv('ng-act-v2',ACT);}
+    if(data.RULES){RULES=data.RULES;sv('ng-rules-v3',RULES);healRules();}
+    syncPush();
+    PROJ=buildProj();renderRules();renderAll();
+    box.style.display='none';
+    setSyncStatus('Imported successfully.');
+  }catch(e){alert('Invalid JSON format.');}
 }
 
 var INITIAL_RULES=[
@@ -525,12 +523,26 @@ var INITIAL_RULES=[
 var RULES=(function(){
   var saved=ld('ng-rules-v3',null);
   if(saved) return saved;
-  // Migrate: keep custom rules from v2, prepend core rules
   var old=ld('ng-rules-v2',[]);
   var custom=old.filter(function(r){return !r.isCore;});
   return INITIAL_RULES.concat(custom);
 })();
-syncSukukRule(); // RULES now defined - safe to sync
+
+// Data Heal: Restore missing tags/isCore properties on existing rules
+function healRules(){
+  if(!RULES) return;
+  INITIAL_RULES.forEach(function(initR){
+    var matched=RULES.find(function(r){return r.id===initR.id || r.name===initR.name;});
+    if(matched){
+      if(!matched.tag) matched.tag=initR.tag;
+      matched.isCore=true;
+      if(initR.isComputed) matched.isComputed=true;
+    }
+  });
+  sv('ng-rules-v3',RULES);
+}
+healRules();
+syncSukukRule();
 
 // ── CUSTOM RULE VALUE ─────────────────────────────────────────────────────
 function ruleVal(rule,i){
@@ -574,7 +586,7 @@ function buildProj(){
         default: r.type==='income'?customIn+=v:customOut+=v;
       }
     });
-    // Zakah computed from live balance
+
     var zakRule=RULES.find(function(r){return r.tag==='zakah'&&!r.disabled;});
     if(zakRule&&mo===2) zak=Math.round((algOpen+SUKUK)*0.025);
 
@@ -885,6 +897,7 @@ function saveRule(){
   var r={
     id:existing?existing.id:('rule_'+Date.now()),
     name:name,
+    tag:existing?existing.tag:null,
     isCore:existing?!!existing.isCore:false,
     isComputed:existing?!!existing.isComputed:false,
     type:document.getElementById('f-type').value,
@@ -905,6 +918,7 @@ function saveRule(){
   closeModal();
   renderRules();
   renderAll();
+  if(typeof renderProj==='function') renderProj();
 }
 function confirmDelete(idx,btn){
   if(btn.dataset.armed==='1'){
