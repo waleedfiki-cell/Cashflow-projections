@@ -49,11 +49,11 @@ html,body{min-height:100%;background:var(--bg);color:var(--txt);font-family:syst
 .btn-r{background:transparent;border:1px solid var(--red);color:var(--red)}
 .btn-s{background:var(--surf2);color:var(--sub);border:1px solid var(--bdr)}
 /* PROJECTION TABLE */
-.proj-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.proj-wrap{overflow:auto;-webkit-overflow-scrolling:touch;max-height:72vh;border:1px solid var(--bdr);border-radius:8px}
 .proj-tbl{border-collapse:collapse;font-size:10px;white-space:nowrap}
-.proj-tbl .th-g{background:var(--surf2);color:var(--sub);font-size:7px;letter-spacing:2px;text-transform:uppercase;padding:3px 5px;text-align:center;border:1px solid var(--bdr)}
-.proj-tbl .th-c{background:var(--surf);color:var(--sub);font-size:7px;letter-spacing:1px;text-transform:uppercase;padding:4px 5px;text-align:right;border-bottom:1px solid var(--bdr);border-right:1px solid rgba(76,86,106,.3);min-width:44px}
-.proj-tbl .th-month{text-align:left;position:sticky;left:0;background:var(--surf);z-index:5;min-width:72px}
+.proj-tbl .th-g{background:var(--surf2);color:var(--txt);font-size:7px;letter-spacing:2px;text-transform:uppercase;padding:3px 5px;text-align:center;border:1px solid var(--bdr);position:sticky;top:0;z-index:8;height:22px}
+.proj-tbl .th-c{background:var(--surf);color:var(--txt);font-size:7px;letter-spacing:1px;text-transform:uppercase;padding:4px 5px;text-align:right;border-bottom:1px solid var(--bdr);border-right:1px solid rgba(76,86,106,.3);min-width:44px;position:sticky;top:22px;z-index:7;height:22px}
+.proj-tbl .th-month{text-align:left;position:sticky;left:0;top:0;background:var(--surf);z-index:9;min-width:72px}
 .proj-tbl td{padding:4px 5px;border-bottom:1px solid rgba(76,86,106,.2);border-right:1px solid rgba(76,86,106,.1);text-align:right;font-family:monospace;font-size:10px}
 .proj-tbl td:first-child{text-align:left;font-family:system-ui;font-size:10px;position:sticky;left:0;background:var(--bg);z-index:4}
 .proj-tbl tr:hover td{background:var(--surf2)}
@@ -62,6 +62,12 @@ html,body{min-height:100%;background:var(--bg);color:var(--txt);font-family:syst
 .proj-tbl tr.actual-row td{color:var(--purp)}
 .proj-tbl tr.actual-row td:first-child{font-weight:700}
 .neg{color:var(--red)!important}.pos{color:var(--grn)!important}.dim{color:var(--mute)}
+.proj-wrap::-webkit-scrollbar{height:13px;width:13px}
+.proj-wrap::-webkit-scrollbar-track{background:var(--surf)}
+.proj-wrap::-webkit-scrollbar-thumb{background:var(--blu);border-radius:7px;border:3px solid var(--surf)}
+.proj-wrap::-webkit-scrollbar-corner{background:var(--surf)}
+.proj-wrap{scrollbar-width:auto;scrollbar-color:var(--blu) var(--surf)}
+.scroll-hint{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--blu);background:rgba(136,192,208,.12);border:1px solid rgba(136,192,208,.3);border-radius:5px;padding:5px 10px;margin:0 12px 8px}
 /* RULES */
 .rule-card{background:var(--surf2);border:1px solid var(--bdr);border-radius:6px;padding:10px;margin-bottom:8px}
 .rule-header{display:flex;align-items:center;gap:8px}
@@ -85,6 +91,46 @@ html,body{min-height:100%;background:var(--bg);color:var(--txt);font-family:syst
 canvas{width:100%;border-radius:4px;display:block}
 ::-webkit-scrollbar{width:3px;height:3px}
 ::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
+
+/* ── PC / DESKTOP REFIT ─────────────────────────────────────────────────── */
+@media (min-width:820px){
+  html,body{font-size:16px}
+  .tabs{max-width:1500px;margin:0 auto}
+  .tab{font-size:13px;letter-spacing:1.5px;padding:14px 6px}
+  .page{max-width:1500px;margin:0 auto;padding:20px 24px}
+  .card{padding:18px 20px;border-radius:10px;margin-bottom:14px}
+  .sums{gap:12px;margin-bottom:14px}
+  .sum{padding:14px 16px}
+  .sum-val{font-size:22px}
+  .sum-lbl{font-size:10px;letter-spacing:2.5px}
+  .yr-tabs{gap:6px;margin-bottom:12px}
+  .yr-tab{font-size:12px;padding:7px 14px}
+  .mgrid{gap:5px}
+  .mcell{padding:10px 4px;border-radius:5px}
+  .mcell-mo{font-size:11px}
+  .mcell-v{font-size:10px}
+  .inp-row label{font-size:10px}
+  .inp-row input,.inp-row textarea,.inp-row select{font-size:14px;padding:10px 12px}
+  .btn{font-size:12px;padding:12px}
+  .rule-card{padding:14px}
+  .rule-name{font-size:14px}
+  .rule-meta{font-size:11px}
+  .rbtn{font-size:11px;padding:8px}
+  .vtbl{font-size:12px}
+  .vtbl th{font-size:9px}
+  .vtbl td{padding:7px 8px}
+  .modal-box{max-width:640px;margin:0 auto;border-radius:12px}
+
+  /* Projection table gets the biggest legibility boost */
+  .proj-wrap{max-height:75vh;border-radius:10px}
+  .proj-tbl{font-size:13px}
+  .proj-tbl .th-g{font-size:11px;letter-spacing:2px;padding:9px 10px;height:32px}
+  .proj-tbl .th-c{font-size:11.5px;letter-spacing:.5px;padding:9px 12px;min-width:82px;height:32px;top:32px}
+  .proj-tbl .th-month{min-width:104px;font-size:11.5px}
+  .proj-tbl td{padding:8px 12px;font-size:12.5px}
+  .proj-tbl td:first-child{font-size:12.5px}
+  .proj-tbl tr.yr-sep td{font-size:10px;padding:7px 10px}
+}
 </style>
 </head>
 <body>
@@ -118,17 +164,17 @@ canvas{width:100%;border-radius:4px;display:block}
       <button class="btn btn-s" style="margin:0;font-size:10px;padding:9px" onclick="exportData()">Export JSON</button>
       <button class="btn btn-s" style="margin:0;font-size:10px;padding:9px" onclick="importData()">Import JSON</button>
     </div>
-    <div style="font-size:9px;color:var(--mute);margin-top:7px;line-height:1.5">Export → copy the JSON → paste into the artifact's Import field (and vice versa) to keep both in sync.</div>
+    <div style="font-size:9px;color:var(--mute);margin-top:7px;line-height:1.5">Export -> copy the JSON -> paste into the artifact's Import field (and vice versa) to keep both in sync.</div>
   </div>
 
 </div>
 
 <!-- PROJECTION -->
 <div id="tab-proj" class="page" style="padding:8px 0 16px">
-  <div style="padding:0 12px 8px;display:flex;justify-content:space-between;align-items:center">
-    <div style="font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase">7-Year Cash Flow — Aug 2026 to Jul 2033</div>
-    <div style="font-size:9px;color:var(--mute)">scroll right &rarr;</div>
+  <div style="padding:0 12px 8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+    <div style="font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase">7-Year Cash Flow - Aug 2026 to Jul 2033</div>
   </div>
+  <div class="scroll-hint">&#8596; Scroll horizontally for more columns &nbsp;|&nbsp; &#8597; Column headers stay pinned while you scroll</div>
   <div class="proj-wrap"><table class="proj-tbl" id="proj-tbl"><thead id="proj-head"></thead><tbody id="proj-body"></tbody></table></div>
 </div>
 
@@ -151,16 +197,51 @@ canvas{width:100%;border-radius:4px;display:block}
 
 <!-- RULES -->
 <div id="tab-rules" class="page">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <div>
-      <div style="font-size:9px;color:var(--purp);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">Custom Line Items</div>
-      <div style="font-size:15px;font-weight:700">Rule Manager</div>
-    </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div style="font-size:15px;font-weight:700">Rule Manager</div>
     <button class="btn btn-g" style="width:auto;padding:9px 16px;margin:0" onclick="openForm(null)">+ Add Rule</button>
   </div>
-  <div style="font-size:11px;color:var(--sub);margin-bottom:12px;line-height:1.6">
-    Add income or expense line items. Each appears as its own named column in the Projection tab and is included in the balance calculation.
+
+  <!-- Capital Settings -->
+  <div class="card" style="margin-bottom:10px">
+    <div style="font-size:9px;color:var(--amb);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">Capital & Start Date Settings</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div>
+        <div style="font-size:9px;color:var(--sub);margin-bottom:3px;text-transform:uppercase;letter-spacing:1px">Sukuk Balance (M e.g. 6)</div>
+        <input type="text" id="cs-sukuk" value="" style="width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:4px;color:var(--txt);font-family:monospace;font-size:13px;padding:7px 8px"/>
+      </div>
+      <div>
+        <div style="font-size:9px;color:var(--sub);margin-bottom:3px;text-transform:uppercase;letter-spacing:1px">Sukuk Rate (%)</div>
+        <input type="text" id="cs-sukuk-rate" value="" style="width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:4px;color:var(--txt);font-family:monospace;font-size:13px;padding:7px 8px"/>
+      </div>
+      <div>
+        <div style="font-size:9px;color:var(--sub);margin-bottom:3px;text-transform:uppercase;letter-spacing:1px">Al-Ghina Balance (M e.g. 6)</div>
+        <input type="text" id="cs-alghina" value="" style="width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:4px;color:var(--txt);font-family:monospace;font-size:13px;padding:7px 8px"/>
+      </div>
+      <div>
+        <div style="font-size:9px;color:var(--sub);margin-bottom:3px;text-transform:uppercase;letter-spacing:1px">Al-Ghina Rate (%)</div>
+        <input type="text" id="cs-alghina-rate" value="" style="width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:4px;color:var(--txt);font-family:monospace;font-size:13px;padding:7px 8px"/>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div style="font-size:9px;color:var(--sub);margin-bottom:3px;text-transform:uppercase;letter-spacing:1px">Start Year</div>
+        <input type="text" id="cs-yr" value="" style="width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:4px;color:var(--txt);font-family:monospace;font-size:13px;padding:7px 8px"/>
+      </div>
+      <div>
+        <div style="font-size:9px;color:var(--sub);margin-bottom:3px;text-transform:uppercase;letter-spacing:1px">Start Month</div>
+        <select id="cs-mo" style="width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:4px;color:var(--txt);font-size:13px;padding:7px 8px">
+          <option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option>
+          <option value="3">Apr</option><option value="4">May</option><option value="5">Jun</option>
+          <option value="6">Jul</option><option value="7">Aug</option><option value="8">Sep</option>
+          <option value="9">Oct</option><option value="10">Nov</option><option value="11">Dec</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-p" style="margin:0;font-size:11px;padding:10px" onclick="saveCapital()">Apply Capital Settings</button>
+    <div id="cs-msg" style="font-size:10px;color:var(--grn);text-align:center;margin-top:6px;display:none">Settings applied - projection updated</div>
   </div>
+
   <div id="rules-list"></div>
 </div>
 
@@ -180,8 +261,8 @@ canvas{width:100%;border-radius:4px;display:block}
         <option value="expense">Expense</option>
       </select>
     </div>
-    <div class="inp-row">
-      <label>Amount (E£)</label>
+    <div class="inp-row" id="f-amount-row">
+      <label id="f-amount-lbl">Amount (E£)</label>
       <input type="text" id="f-amount" placeholder="e.g. 5000"/>
     </div>
     <div class="inp-row">
@@ -232,26 +313,96 @@ canvas{width:100%;border-radius:4px;display:block}
 </div>
 
 <script>
-// ── CONSTANTS ─────────────────────────────────────────────────────────────
-var SUKUK=6000000,SUKUK_MTH=87500,ALGHINA_0=6000000,ALGH_RATE=0.175;
+// ── SETTINGS (editable capital config) ────────────────────────────────────
+var SETTINGS=ld('ng-capital-v1',{
+  sukuk:6000000, sukukRate:17.5,
+  alghina:6000000, alghinaRate:17.5,
+  startYear:2026, startMonth:7   // 7=August (0-indexed)
+});
+function applySettings(){
+  SUKUK=SETTINGS.sukuk;
+  SUKUK_MTH=Math.round(SUKUK*SETTINGS.sukukRate/100/12);
+  ALGHINA_0=SETTINGS.alghina;
+  ALGH_RATE=SETTINGS.alghinaRate/100;
+  START_YEAR=SETTINGS.startYear;
+  START_MONTH=SETTINGS.startMonth;
+  // Rebuild month labels for dropdowns
+  ALL_MONTHS=Array.from({length:84},function(_,i){
+    var d=new Date(START_YEAR,START_MONTH+i);
+    return MN[d.getMonth()]+' '+d.getFullYear();
+  });
+}
+function syncSukukRule(){
+  // Sync sukuk rule amount after RULES is initialized
+  if(typeof RULES!=='undefined'&&RULES){
+    var sr=RULES.find(function(r){return r.id==='sukuk';});
+    if(sr) sr.amount=SUKUK_MTH;
+  }
+}
+// ── CONSTANTS (derived from SETTINGS) ─────────────────────────────────────
+var MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var SUKUK,SUKUK_MTH,ALGHINA_0,ALGH_RATE,START_YEAR,START_MONTH;
+applySettings(); // MN is defined above so ALL_MONTHS builds correctly
 var MALEK_SEM=Math.round((10070)*55*(1.03));
 var AUC_INST=Math.round(9000*50*(1.03));
 var HOME_BASE=80000,BIZ_BASE=300000,ADAM_Y=250000,SUMMER=26700;
-var MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-var ALL_MONTHS=[];
-for(var _i=0;_i<84;_i++){var _d=new Date(2026,7+_i);ALL_MONTHS.push(MN[_d.getMonth()]+" "+_d.getFullYear());}
+// ALL_MONTHS built by applySettings()
 
 // ── STORAGE ───────────────────────────────────────────────────────────────
 function ld(k,def){try{var v=localStorage.getItem(k);return v?JSON.parse(v):def;}catch(e){return def;}}
 function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 var ACT=ld('ng-act-v2',{});
-var RULES=ld('ng-rules-v2',[]);
+
+var INITIAL_RULES=[
+  {id:"sukuk",name:"ADIB Sukuk Income",type:"income",tag:"sukuk",
+   amount:87500,rec:"monthly",months:[],annMo:0,start:0,end:null,
+   changeRate:0,cap:null,isCore:true,disabled:false,
+   notes:"E£6M at 17.5% p.a. fixed = E£87,500/month"},
+  {id:"business",name:"Business Income (NG Fitness)",type:"income",tag:"business",
+   amount:300000,rec:"quarterly",months:[],annMo:0,start:0,end:null,
+   changeRate:10,cap:null,isCore:true,disabled:false,
+   notes:"Quarterly Jan/Apr/Jul/Oct, +10% p.a. uncapped"},
+  {id:"housing",name:"Home & Living Expenses",type:"expense",tag:"housing",
+   amount:80000,rec:"monthly",months:[],annMo:0,start:0,end:null,
+   changeRate:10,cap:120000,isCore:true,disabled:false,
+   notes:"Monthly +10% p.a., capped at E£120K"},
+  {id:"summer",name:"Summer House (Quarterly)",type:"expense",tag:"summer",
+   amount:26700,rec:"quarterly",months:[],annMo:0,start:0,end:23,
+   changeRate:0,cap:null,isCore:true,disabled:false,
+   notes:"Jan/Apr/Jul/Oct until Jul 2028 (i<=23)"},
+  {id:"malek",name:"Malek Tuition - Carl Benz",type:"expense",tag:"education_malek",
+   amount:570466,rec:"specific",months:[7,1],annMo:0,start:6,end:30,
+   changeRate:0,cap:null,isCore:true,disabled:false,
+   notes:"EUR 10,070 x E£55 x 1.03 per semester, Feb/Aug Yrs 1-3"},
+  {id:"adam_school",name:"Adam School Fees",type:"expense",tag:"education_adam_school",
+   amount:83333,rec:"specific",months:[6,10,1],annMo:0,start:0,end:30,
+   changeRate:0,cap:null,isCore:true,disabled:false,
+   notes:"E£250K/yr in 3 installments Jul/Nov/Feb, Years 1-3"},
+  {id:"adam_auc",name:"Adam AUC Tuition",type:"expense",tag:"education_adam_auc",
+   amount:463500,rec:"specific",months:[7,1],annMo:0,start:35,end:83,
+   changeRate:0,cap:null,isCore:true,disabled:false,
+   notes:"USD 9K x E£50 x 1.03 per semester, Aug/Feb Yrs 4-7"},
+  {id:"zakah",name:"Zakah (Annual - March)",type:"expense",tag:"zakah",
+   amount:null,rec:"annual",months:[],annMo:2,start:0,end:null,
+   changeRate:0,cap:null,isCore:true,disabled:false,isComputed:true,
+   notes:"2.5% x (Al-Ghina + E£6M Sukuk) each March - auto-computed"},
+];
+
+var RULES=(function(){
+  var saved=ld('ng-rules-v3',null);
+  if(saved) return saved;
+  // Migrate: keep custom rules from v2, prepend core rules
+  var old=ld('ng-rules-v2',[]);
+  var custom=old.filter(function(r){return !r.isCore;});
+  return INITIAL_RULES.concat(custom);
+})();
+syncSukukRule(); // RULES now defined - safe to sync
 
 // ── CUSTOM RULE VALUE ─────────────────────────────────────────────────────
 function ruleVal(rule,i){
   if(i<(rule.start||0)) return 0;
   if(rule.end!=null&&i>rule.end) return 0;
-  var mo=(7+i)%12,yi=Math.floor(i/12);
+  var d=new Date(START_YEAR,START_MONTH+i),mo=d.getMonth(),yi=Math.floor(i/12);
   var amt=rule.amount*Math.pow(1+(rule.changeRate||0)/100,yi);
   if(rule.cap) amt=Math.min(amt,rule.cap);
   amt=Math.round(amt);
@@ -265,46 +416,47 @@ function ruleVal(rule,i){
   return 0;
 }
 
-// ── BUILD PROJECTION ──────────────────────────────────────────────────────
+// ── BUILD PROJECTION (driven by RULES) ───────────────────────────────────
 function buildProj(){
   var rows=[],bal=ALGHINA_0,prev=0;
   for(var i=0;i<84;i++){
-    var d=new Date(2026,7+i),mo=d.getMonth(),yi=Math.floor(i/12);
-    var home=Math.min(Math.round(HOME_BASE*Math.pow(1.1,yi)),120000);
-    var bizQ=Math.round(BIZ_BASE*Math.pow(1.1,yi)); // uncapped in 7-yr plan
-    var sukuk=SUKUK_MTH; // paid from Aug 2026 (i=0), deposit made Jul 31
-    var biz=[0,3,6,9].indexOf(mo)>=0?bizQ:0;
-    var intIn=prev,algOpen=bal;
-    var adamSch=(yi<=2&&[6,10,1].indexOf(mo)>=0)?Math.round(ADAM_Y/3):0;
-    var adamAUC=(yi>=3&&yi<=6&&[7,1].indexOf(mo)>=0)?AUC_INST:0;
-    var smr=[0,3,6,9].indexOf(mo)>=0&&i<=23?SUMMER:0;
-    var mlk=yi<=2&&[7,1].indexOf(mo)>=0&&i!==0?MALEK_SEM:0;
-    var zak=mo===2?Math.round((algOpen+SUKUK)*0.025):0;
-    var edu=adamSch+adamAUC+mlk;
-    // Custom rules
-    var customVals={};
-    var customIn=0,customOut=0;
+    var d=new Date(START_YEAR,START_MONTH+i),mo=d.getMonth(),yi=Math.floor(i/12);
+    var algOpen=bal,intIn=prev;
+    var sukuk=0,biz=0,home=0,edu=0,smr=0,zak=0,customIn=0,customOut=0,customVals={};
+
     RULES.forEach(function(r){
+      if(r.disabled||r.isComputed) return;
       var v=ruleVal(r,i);
       customVals[r.id]=v;
-      if(r.type==='income') customIn+=v; else customOut+=v;
+      if(!v) return;
+      switch(r.tag){
+        case 'sukuk': sukuk+=v; break;
+        case 'business': biz+=v; break;
+        case 'housing': home+=v; break;
+        case 'summer': smr+=v; break;
+        case 'education_malek':
+        case 'education_adam_school':
+        case 'education_adam_auc': edu+=v; break;
+        default: r.type==='income'?customIn+=v:customOut+=v;
+      }
     });
+    // Zakah computed from live balance
+    var zakRule=RULES.find(function(r){return r.tag==='zakah'&&!r.disabled;});
+    if(zakRule&&mo===2) zak=Math.round((algOpen+SUKUK)*0.025);
+
     var totalIn=sukuk+biz+intIn+customIn;
     var totalOut=home+edu+smr+zak+customOut;
     var lDB=Math.max(0,algOpen+intIn-totalOut);
     var intCalc=Math.round(lDB*ALGH_RATE/12);
     bal=algOpen+totalIn-totalOut; prev=intCalc;
-    var yr=2026+Math.floor((7+i)/12);
-    rows.push({
-      i:i,mo:mo,yi:yi,yr:yr,
-      lbl:MN[mo]+" '"+String(yr).slice(2),
-      fullLbl:MN[mo]+" "+yr,
+    var yr=d.getFullYear();
+    rows.push({i:i,mo:mo,yi:yi,yr:yr,
+      lbl:MN[mo]+" '"+String(d.getFullYear()).slice(2),fullLbl:MN[mo]+" "+d.getFullYear(),
       sukuk:sukuk,biz:biz,intIn:intIn,customIn:customIn,totalIn:Math.round(totalIn),
       home:home,edu:edu,smr:smr,zak:zak,customOut:customOut,totalOut:Math.round(totalOut),
       net:Math.round(totalIn-totalOut),
       algOpen:Math.round(algOpen),algClose:Math.round(bal),total:Math.round(SUKUK+bal),
-      customVals:customVals
-    });
+      customVals:customVals});
   }
   return rows;
 }
@@ -341,8 +493,8 @@ function showTab(t){
     document.getElementById('tab-'+id).classList.toggle('on',id===t);
   });
   if(t==='chart'){PROJ=buildProj();drawCharts();}
+  if(t==='rules'){fillCapitalInputs();renderRules();}
   if(t==='proj'){PROJ=buildProj();renderProj();}
-  if(t==='rules') renderRules();
 }
 
 // ── SUMMARY ───────────────────────────────────────────────────────────────
@@ -375,7 +527,7 @@ function renderMgrid(){
     var cls='mcell'+(isSel?' sel':hasA?(vari>=0?' has-a':' neg-a'):'');
     var vt=hasA?((vari>=0?'+':'')+Math.round(vari/1000)+'K'):'';
     return'<div class="'+cls+'" onclick="selMo='+gi+';renderInput();renderMgrid()">'
-      +'<div class="mcell-mo">'+MN[(7+gi)%12]+'</div>'
+      +'<div class="mcell-mo">'+MN[(START_MONTH+gi)%12]+'</div>'
       +'<div class="mcell-v" style="color:'+(hasA?vari>=0?'var(--grn)':'var(--red)':'var(--mute)')+'">'+vt+'</div>'
       +'</div>';
   }).join('');
@@ -440,10 +592,10 @@ function renderProj(){
     +'<th class="th-g" colspan="3">BALANCE</th>'
     +'</tr><tr>'
     +'<th class="th-c">Sukuk</th><th class="th-c">Business</th><th class="th-c">Interest</th>';
-  incRules.forEach(function(r){hg+='<th class="th-c" style="color:var(--teal);max-width:60px">'+r.name+'</th>';});
+  incRules.forEach(function(r){hg+='<th class="th-c" style="color:var(--teal);max-width:110px;overflow:hidden;text-overflow:ellipsis" title="'+r.name+'">'+r.name+'</th>';});
   hg+='<th class="th-c" style="color:var(--grn)">Total In</th>'
     +'<th class="th-c">Home</th><th class="th-c">Education</th><th class="th-c">Summer</th><th class="th-c">Zakah</th>';
-  expRules.forEach(function(r){hg+='<th class="th-c" style="color:var(--amb);max-width:60px">'+r.name+'</th>';});
+  expRules.forEach(function(r){hg+='<th class="th-c" style="color:var(--amb);max-width:110px;overflow:hidden;text-overflow:ellipsis" title="'+r.name+'">'+r.name+'</th>';});
   hg+='<th class="th-c" style="color:var(--red)">Total Out</th>'
     +'<th class="th-c" style="color:var(--blu);border-left:1px solid var(--bdr)">Net</th>'
     +'<th class="th-c" style="color:var(--blu)">Al-Ghina</th>'
@@ -492,24 +644,40 @@ function renderProj(){
 // ── RULES MANAGER ─────────────────────────────────────────────────────────
 function renderRules(){
   var el=document.getElementById('rules-list');
-  if(!RULES.length){
-    el.innerHTML='<div style="color:var(--sub);text-align:center;padding:32px 0;font-size:13px;line-height:1.7">No custom rules yet.<br/>Tap "+ Add Rule" to add income or expense line items.</div>';
-    return;
-  }
-  el.innerHTML=RULES.map(function(r,idx){
+  function ruleCard(r,idx){
     var clr=r.type==='income'?'var(--grn)':'var(--red)';
-    var recLabel={'monthly':'Monthly','quarterly':'Quarterly (Jan/Apr/Jul/Oct)','specific':'Specific months','annual':'Annual','one_time':'One-time'}[r.rec]||r.rec;
+    var recLabel={'monthly':'Monthly','quarterly':'Quarterly','specific':'Specific months','annual':'Annual','one_time':'One-time'}[r.rec]||r.rec;
+    var amtStr=r.isComputed?'computed':('E£'+(r.amount||0).toLocaleString()+'/'+recLabel);
     return'<div class="rule-card">'
       +'<div class="rule-header"><div class="rule-dot" style="background:'+clr+'"></div>'
-      +'<div><div class="rule-name">'+r.name+'</div>'
-      +'<div class="rule-meta">'+r.type.toUpperCase()+' &nbsp;|&nbsp; E£'+r.amount.toLocaleString()+'/'+recLabel+(r.changeRate?' &nbsp;|&nbsp; +'+r.changeRate+'% p.a.':'')+'</div>'
-      +(r.notes?'<div style="font-size:10px;color:var(--mute);margin-top:2px">'+r.notes+'</div>':'')
+      +'<div style="flex:1;min-width:0"><div class="rule-name">'+r.name+(r.disabled?' <span style="font-size:9px;color:var(--mute)">(off)</span>':'')+'</div>'
+      +'<div class="rule-meta">'+r.type.toUpperCase()+' | '+amtStr+(r.changeRate?' | +'+r.changeRate+'% p.a.':'')+(r.cap?' | cap E£'+r.cap.toLocaleString():'')+'</div>'
+      +(r.notes?'<div style="font-size:9px;color:var(--mute);margin-top:2px">'+r.notes+'</div>':'')
       +'</div></div>'
       +'<div class="rule-btns">'
+      +'<button class="rbtn" style="background:'+(r.disabled?'var(--surf)':'rgba(163,190,140,.15)')+';color:'+(r.disabled?'var(--sub)':'var(--grn)')+';border:1px solid '+(r.disabled?'var(--bdr)':'var(--grn)')+'40" onclick="toggleRule('+idx+')">'+(r.disabled?'Enable':'On')+'</button>'
       +'<button class="rbtn" style="background:var(--surf);color:var(--sub);border:1px solid var(--bdr)" onclick="openForm('+idx+')">Edit</button>'
-      +'<button class="rbtn" style="background:rgba(191,97,106,.15);color:var(--red);border:1px solid rgba(191,97,106,.3)" onclick="confirmDelete('+idx+',this)">Delete</button>'
+      +(r.isCore?'<button class="rbtn" style="background:var(--surf2);color:var(--mute);border:1px solid var(--bdr)" disabled>Core</button>':'<button class="rbtn" style="background:rgba(191,97,106,.15);color:var(--red);border:1px solid rgba(191,97,106,.3)" onclick="confirmDelete('+idx+',this)">Delete</button>')
       +'</div></div>';
-  }).join('');
+  }
+  var coreR=RULES.filter(function(r){return r.isCore;});
+  var custR=RULES.filter(function(r){return !r.isCore;});
+  var h='<div style="font-size:11px;color:var(--sub);margin-bottom:10px;line-height:1.6">'
+    +'Tap <b style="color:var(--txt)">Edit</b> to change any amount, date, or rate. '
+    +'Core rules can be edited but not deleted.</div>';
+  h+='<div style="font-size:9px;color:var(--purp);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Core Rules</div>';
+  h+=coreR.map(function(r){return ruleCard(r,RULES.indexOf(r));}).join('');
+  if(custR.length){
+    h+='<div style="font-size:9px;color:var(--teal);letter-spacing:2px;text-transform:uppercase;margin:12px 0 6px">Custom Rules</div>';
+    h+=custR.map(function(r){return ruleCard(r,RULES.indexOf(r));}).join('');
+  } else {
+    h+='<div style="color:var(--mute);font-size:12px;text-align:center;padding:14px 0">No custom rules - tap + Add Rule</div>';
+  }
+  el.innerHTML=h;
+}
+function toggleRule(idx){
+  RULES[idx].disabled=!RULES[idx].disabled;
+  sv('ng-rules-v3',RULES); PROJ=buildProj(); renderRules(); renderAll();
 }
 
 // ── FORM ──────────────────────────────────────────────────────────────────
@@ -547,6 +715,11 @@ function openForm(idx){
   if(r&&r.rec==='annual') annSel.value=r.annMo||0;
   buildMonthBtns();
   toggleRecFields();
+  // Handle computed rules (zakah)
+  var isComp=r&&r.isComputed;
+  document.getElementById('f-amount-row').style.opacity=isComp?'0.4':'1';
+  document.getElementById('f-amount').disabled=!!isComp;
+  document.getElementById('f-amount-lbl').textContent=isComp?'Amount (auto-computed)':'Amount (E£)';
   document.getElementById('modal').classList.add('on');
   document.getElementById('f-name').focus();
 }
@@ -568,9 +741,13 @@ function saveRule(){
   var amtRaw=(document.getElementById('f-amount').value||'').replace(/,/g,'');var amt=amtRaw===''?0:parseFloat(amtRaw);
   if(isNaN(amt)){alert('Please enter a valid amount.');return;}
   var endVal=document.getElementById('f-end').value;
+  var existingIdx=document.getElementById('f-id').value;
+  var existing=existingIdx!==''?RULES[parseInt(existingIdx)]:null;
   var r={
-    id:'rule_'+Date.now(),
+    id:existing?existing.id:('rule_'+Date.now()),
     name:name,
+    isCore:existing?!!existing.isCore:false,
+    isComputed:existing?!!existing.isComputed:false,
     type:document.getElementById('f-type').value,
     amount:amt,
     rec:document.getElementById('f-rec').value,
@@ -582,9 +759,8 @@ function saveRule(){
     cap:parseFloat(document.getElementById('f-cap').value)||null,
     notes:document.getElementById('f-notes').value.trim()
   };
-  var idxStr=document.getElementById('f-id').value;
-  if(idxStr!=='') RULES[parseInt(idxStr)]=r; else RULES.push(r);
-  sv('ng-rules-v2',RULES);
+  if(existingIdx!=='') RULES[parseInt(existingIdx)]=r; else RULES.push(r);
+  sv('ng-rules-v3',RULES);
   PROJ=buildProj();
   closeModal();
   renderRules();
@@ -608,7 +784,7 @@ function confirmDelete(idx,btn){
 }
 function deleteRule(idx){
   RULES.splice(idx,1);
-  sv('ng-rules-v2',RULES);
+  sv('ng-rules-v3',RULES);
   PROJ=buildProj();
   renderRules();
   renderAll();
@@ -640,6 +816,36 @@ function drawCharts(){
   var rb=rebased();
   drawLine('chart',[{data:rb.map(function(r){return r.proj/1000;}),color:'#88C0D0',dash:[5,3]},{data:rb.map(function(r){return r.updated/1000;}),color:'#B48EAD'},{data:rb.map(function(r){return r.hasA?r.actual/1000:null;}),color:'#A3BE8C',dots:true,w:0}]);
   drawLine('chart2',[{data:rb.map(function(r){return(r.updated+SUKUK)/1000;}),color:'#EBCB8B',w:2}]);
+}
+
+// ── CAPITAL SETTINGS FUNCTIONS ─────────────────────────────────────────────
+function fillCapitalInputs(){
+  document.getElementById('cs-sukuk').value=(SETTINGS.sukuk/1000000).toFixed(2);
+  document.getElementById('cs-sukuk-rate').value=SETTINGS.sukukRate;
+  document.getElementById('cs-alghina').value=(SETTINGS.alghina/1000000).toFixed(2);
+  document.getElementById('cs-alghina-rate').value=SETTINGS.alghinaRate;
+  document.getElementById('cs-yr').value=SETTINGS.startYear;
+  document.getElementById('cs-mo').value=SETTINGS.startMonth;
+}
+function saveCapital(){
+  var sukuk=parseFloat((document.getElementById('cs-sukuk').value||'').replace(/,/g,''))*1000000;
+  var sukukRate=parseFloat(document.getElementById('cs-sukuk-rate').value)||17.5;
+  var alghina=parseFloat((document.getElementById('cs-alghina').value||'').replace(/,/g,''))*1000000;
+  var alghinaRate=parseFloat(document.getElementById('cs-alghina-rate').value)||17.5;
+  var yr=parseInt(document.getElementById('cs-yr').value)||2026;
+  var mo=parseInt(document.getElementById('cs-mo').value)||0;
+  if(isNaN(sukuk)||sukuk<=0||isNaN(alghina)||alghina<0){
+    alert('Enter valid balances in millions (e.g. 6 = E£6,000,000).');return;
+  }
+  SETTINGS={sukuk:sukuk,sukukRate:sukukRate,alghina:alghina,alghinaRate:alghinaRate,startYear:yr,startMonth:mo};
+  sv('ng-capital-v1',SETTINGS);
+  applySettings();
+  syncSukukRule();
+  sv('ng-rules-v3',RULES);
+  PROJ=buildProj();
+  var msg=document.getElementById('cs-msg');
+  if(msg){msg.style.display='block';setTimeout(function(){msg.style.display='none';},2500);}
+  renderAll();
 }
 
 // ── RENDER ALL ────────────────────────────────────────────────────────────
