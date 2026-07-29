@@ -716,8 +716,8 @@ function renderVarLog(){
 // ── FULL PROJECTION TABLE ─────────────────────────────────────────────────
 function renderProj(){
   var rb=rebased();
-  var incRules=RULES.filter(function(r){return r.type==='income';});
-  var expRules=RULES.filter(function(r){return r.type==='expense';});
+  var incRules=RULES.filter(function(r){return r.type==='income'&&!r.isCore;});
+  var expRules=RULES.filter(function(r){return r.type==='expense'&&!r.isCore;});
   // Build header
   var hg='<tr>'
     +'<th class="th-c th-month" rowspan="2">Month</th>'
@@ -766,6 +766,7 @@ function renderProj(){
       var v=p.customVals[rule.id]||0;
       h+='<td>'+(v?'<span style="color:var(--amb)">'+f(v)+'</span>':'<span class="dim">--</span>')+'</td>';
     });
+    h+='<td style="color:var(--red)">'+f(p.totalOut)+'</td>';
     var algCls=algDisp<0?' class="neg"':algDisp>0?' class="pos"':'';
     h+='<td style="color:'+(p.net>=0?'var(--grn)':'var(--red)')+'">'+(p.net>0?'+':'')+f(p.net)+'</td>'
       +'<td'+algCls+'>'+f(algDisp)+'</td>'
@@ -897,6 +898,7 @@ function saveRule(){
   sv('ng-rules-v3',RULES);
   syncPush();
   PROJ=buildProj();
+  closeModal();
   renderRules();
   renderAll();
 }
