@@ -375,15 +375,15 @@ var ACT=ld('ng-act-v2',{});
 //      { "rules": { "users": { "$uid": { ".read": "auth.uid === $uid", ".write": "auth.uid === $uid" } } } }
 // 6. Project settings (gear icon) > General > "Your apps" > Web app (</>) > copy the config object below
 var firebaseConfig={
-  apiKey:"PASTE_API_KEY",
-  authDomain:"PASTE_PROJECT.firebaseapp.com",
-  databaseURL:"https://PASTE_PROJECT-default-rtdb.firebaseio.com",
-  projectId:"PASTE_PROJECT",
-  appId:"PASTE_APP_ID"
+  apiKey:"AIzaSyCtJC02fbAJxf8e2ptLW3tQxNXiW36F5xU",
+  authDomain:"cashflow-3ece7.firebaseapp.com",
+  databaseURL:"https://cashflow-3ece7-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"cashflow-3ece7",
+  appId:"1:676746739527:web:bb4c57f39842a5dca7d662"
 };
 var fbApp=null, fbAuth=null, fbDb=null, fbUser=null;
 var syncTimer=null, applyingRemote=false, syncListenerRef=null;
-function syncConfigured(){return firebaseConfig.apiKey.indexOf('PASTE_')!==0;}
+function syncConfigured(){return firebaseConfig.apiKey.indexOf('PASTE_')!==0 && firebaseConfig.databaseURL.indexOf('PASTE_')!==0;}
 function initSync(){
   if(!syncConfigured()){setSyncStatus('Not configured - edit firebaseConfig in the source file.');return;}
   try{
