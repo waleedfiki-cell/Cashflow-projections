@@ -1,6 +1,6 @@
 {
-  "name": "NG Cash Flow Tracker",
-  "short_name": "NG CashFlow",
+  "name": "Cashflow",
+  "short_name": "Cashflow",
   "description": "Personal financial tracker and 7-year cash flow projection",
   "display": "standalone",
   "orientation": "portrait-primary",
