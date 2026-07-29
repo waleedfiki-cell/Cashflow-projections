@@ -1,4 +1,4 @@
-const CACHE = 'ng-cashflow-v3';
+const CACHE = 'ng-cashflow-v4';
 const FILES = ['./index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
@@ -20,8 +20,27 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  const req = e.request;
+  const isHTML = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
+
+  if (isHTML) {
+    // Network-first for the app shell: always try to get the latest index.html
+    // when online, only fall back to the cached copy when offline.
+    e.respondWith(
+      fetch(req)
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put('./index.html', copy));
+          return res;
+        })
+        .catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
+  // Cache-first for everything else (manifest, icon, etc.)
   e.respondWith(
-    caches.match(e.request)
-      .then(r => r || fetch(e.request).catch(() => caches.match('./index.html')))
+    caches.match(req)
+      .then(r => r || fetch(req).catch(() => caches.match('./index.html')))
   );
 });
