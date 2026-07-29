@@ -552,11 +552,11 @@ function ruleVal(rule,i){
 
 // ── BUILD PROJECTION (driven by RULES) ───────────────────────────────────
 function buildProj(){
-  var rows=[],bal=ALGHINA_0,prev=0;
+  var rows=[],bal=ALGHINA_0,prev=0,prevSukuk=0;
   for(var i=0;i<84;i++){
     var d=new Date(START_YEAR,START_MONTH+i),mo=d.getMonth(),yi=Math.floor(i/12);
     var algOpen=bal,intIn=prev;
-    var sukuk=0,biz=0,home=0,eduMalek=0,eduAdamSchool=0,eduAdamAuc=0,smr=0,zak=0,customIn=0,customOut=0,customVals={};
+    var sukuk=prevSukuk,sukukCalc=0,biz=0,home=0,eduMalek=0,eduAdamSchool=0,eduAdamAuc=0,smr=0,zak=0,customIn=0,customOut=0,customVals={};
 
     RULES.forEach(function(r){
       if(r.disabled||r.isComputed) return;
@@ -564,7 +564,7 @@ function buildProj(){
       customVals[r.id]=v;
       if(!v) return;
       switch(r.tag){
-        case 'sukuk': sukuk+=v; break;
+        case 'sukuk': sukukCalc+=v; break;
         case 'business': biz+=v; break;
         case 'housing': home+=v; break;
         case 'summer': smr+=v; break;
@@ -583,7 +583,7 @@ function buildProj(){
     var totalOut=home+edu+smr+zak+customOut;
     var lDB=Math.max(0,algOpen+intIn-totalOut);
     var intCalc=Math.round(lDB*ALGH_RATE/12);
-    bal=algOpen+totalIn-totalOut; prev=intCalc;
+    bal=algOpen+totalIn-totalOut; prev=intCalc; prevSukuk=sukukCalc;
     var yr=d.getFullYear();
     rows.push({i:i,mo:mo,yi:yi,yr:yr,
       lbl:MN[mo]+" '"+String(d.getFullYear()).slice(2),fullLbl:MN[mo]+" "+d.getFullYear(),
