@@ -5,11 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-title" content="NG CashFlow"/>
+<meta name="apple-mobile-web-app-title" content="CashFlow"/>
 <link rel="apple-touch-icon" href="icon.svg"/>
 <meta name="theme-color" content="#2E3440"/>
 <link rel="manifest" href="manifest.json"/>
-<title>NG Cash Flow Tracker</title>
+<title>Cash Flow Tracker</title>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -159,12 +162,22 @@ canvas{width:100%;border-radius:4px;display:block}
     </table>
   </div>
   <div class="card" style="margin-top:4px">
-    <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Data Sync</div>
+    <div style="font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Cloud Sync</div>
+    <div id="sync-login">
+      <div class="inp-row"><label>Email</label><input type="email" id="sync-email" placeholder="you@example.com"/></div>
+      <div class="inp-row"><label>Password</label><input type="password" id="sync-pass" placeholder="••••••••"/></div>
+      <button class="btn btn-p" style="margin:0 0 6px" onclick="syncSignIn()">Sign In & Sync</button>
+    </div>
+    <div id="sync-live" style="display:none">
+      <button class="btn btn-s" style="margin:0 0 6px;font-size:10px;padding:9px" onclick="syncSignOut()">Sign Out</button>
+    </div>
+    <div id="sync-status" style="font-size:10px;color:var(--sub);margin:4px 0 8px;line-height:1.5">Not signed in.</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <button class="btn btn-s" style="margin:0;font-size:10px;padding:9px" onclick="exportData()">Export JSON</button>
       <button class="btn btn-s" style="margin:0;font-size:10px;padding:9px" onclick="importData()">Import JSON</button>
     </div>
-    <div style="font-size:9px;color:var(--mute);margin-top:7px;line-height:1.5">Export -> copy the JSON -> paste into the artifact's Import field (and vice versa) to keep both in sync.</div>
+    <textarea id="sync-io-box" rows="4" style="display:none;width:100%;margin-top:8px;background:var(--bg);border:1px solid var(--bdr);border-radius:4px;color:var(--txt);font-size:10px;font-family:monospace;padding:8px"></textarea>
+    <div style="font-size:9px;color:var(--mute);margin-top:7px;line-height:1.5">Sign in with the same account on your phone and laptop to sync automatically. Export/Import JSON works as a manual backup either way.</div>
   </div>
 
 </div>
@@ -352,6 +365,127 @@ var HOME_BASE=80000,BIZ_BASE=300000,ADAM_Y=250000,SUMMER=26700;
 function ld(k,def){try{var v=localStorage.getItem(k);return v?JSON.parse(v):def;}catch(e){return def;}}
 function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 var ACT=ld('ng-act-v2',{});
+
+// ── CLOUD SYNC (Firebase Realtime Database) ─────────────────────────────
+// 1. Create a free project at https://console.firebase.google.com
+// 2. Build > Authentication > Sign-in method > enable "Email/Password"
+// 3. Authentication > Users > Add user (one email+password you'll use on both devices)
+// 4. Build > Realtime Database > Create database (start in "locked mode")
+// 5. Rules tab, paste:
+//      { "rules": { "users": { "$uid": { ".read": "auth.uid === $uid", ".write": "auth.uid === $uid" } } } }
+// 6. Project settings (gear icon) > General > "Your apps" > Web app (</>) > copy the config object below
+var firebaseConfig={
+  apiKey:"PASTE_API_KEY",
+  authDomain:"PASTE_PROJECT.firebaseapp.com",
+  databaseURL:"https://PASTE_PROJECT-default-rtdb.firebaseio.com",
+  projectId:"PASTE_PROJECT",
+  appId:"PASTE_APP_ID"
+};
+var fbApp=null, fbAuth=null, fbDb=null, fbUser=null;
+var syncTimer=null, applyingRemote=false, syncListenerRef=null;
+function syncConfigured(){return firebaseConfig.apiKey.indexOf('PASTE_')!==0;}
+function initSync(){
+  if(!syncConfigured()){setSyncStatus('Not configured - edit firebaseConfig in the source file.');return;}
+  try{
+    fbApp=firebase.initializeApp(firebaseConfig);
+    fbAuth=firebase.auth();
+    fbDb=firebase.database();
+  }catch(e){setSyncStatus('Firebase init failed: '+e.message);return;}
+  fbAuth.onAuthStateChanged(function(user){
+    fbUser=user;
+    if(user){
+      document.getElementById('sync-login').style.display='none';
+      document.getElementById('sync-live').style.display='block';
+      setSyncStatus('Signed in as '+user.email+'. Listening for changes...');
+      attachRemoteListener();
+    } else {
+      document.getElementById('sync-login').style.display='block';
+      document.getElementById('sync-live').style.display='none';
+      if(syncListenerRef){syncListenerRef.off();syncListenerRef=null;}
+    }
+  });
+  var savedEmail=ld('ng-sync-email',null);
+  if(savedEmail){var el=document.getElementById('sync-email');if(el)el.value=savedEmail;}
+}
+function syncSignIn(){
+  var email=document.getElementById('sync-email').value.trim();
+  var pass=document.getElementById('sync-pass').value;
+  if(!email||!pass){alert('Enter email and password.');return;}
+  setSyncStatus('Signing in...');
+  fbAuth.signInWithEmailAndPassword(email,pass).then(function(){
+    sv('ng-sync-email',email);
+  }).catch(function(err){setSyncStatus('Sign-in failed: '+err.message);});
+}
+function syncSignOut(){fbAuth.signOut();}
+function attachRemoteListener(){
+  if(!fbUser)return;
+  syncListenerRef=fbDb.ref('users/'+fbUser.uid+'/ngdata');
+  syncListenerRef.on('value',function(snap){
+    var data=snap.val();
+    if(!data){syncPush();return;} // nothing remote yet -> seed it with local data
+    var localTs=ld('ng-sync-ts',0);
+    if(data.ts && data.ts>localTs){
+      applyingRemote=true;
+      if(data.SETTINGS){SETTINGS=data.SETTINGS;sv('ng-capital-v1',SETTINGS);applySettings();}
+      if(data.ACT){ACT=data.ACT;sv('ng-act-v2',ACT);}
+      if(data.RULES){RULES=data.RULES;sv('ng-rules-v3',RULES);}
+      sv('ng-sync-ts',data.ts);
+      PROJ=buildProj();
+      renderRules();renderAll();
+      if(typeof drawCharts==='function')try{drawCharts();}catch(e){}
+      applyingRemote=false;
+      setSyncStatus('Synced just now (from other device).');
+    }
+  });
+}
+function syncPush(){
+  if(!fbUser||!fbDb||applyingRemote)return;
+  clearTimeout(syncTimer);
+  syncTimer=setTimeout(function(){
+    var ts=Date.now();
+    sv('ng-sync-ts',ts);
+    fbDb.ref('users/'+fbUser.uid+'/ngdata').set({SETTINGS:SETTINGS,ACT:ACT,RULES:RULES,ts:ts})
+      .then(function(){setSyncStatus('Synced just now.');})
+      .catch(function(err){setSyncStatus('Sync failed: '+err.message);});
+  },700);
+}
+function setSyncStatus(msg){
+  var el=document.getElementById('sync-status');
+  if(el)el.textContent=msg;
+}
+window.addEventListener('load',initSync);
+
+// ── MANUAL EXPORT / IMPORT (backup, or if you skip cloud sync) ──────────
+function exportData(){
+  var blob={SETTINGS:SETTINGS,ACT:ACT,RULES:RULES,exportedAt:new Date().toISOString()};
+  var text=JSON.stringify(blob);
+  var box=document.getElementById('sync-io-box');
+  box.style.display='block';
+  box.value=text;
+  box.focus();box.select();
+  try{document.execCommand('copy');setSyncStatus('Exported & copied to clipboard.');}
+  catch(e){setSyncStatus('Exported below - copy it manually.');}
+}
+function importData(){
+  var box=document.getElementById('sync-io-box');
+  box.style.display='block';
+  box.value='';
+  box.placeholder='Paste exported JSON here, then click Import again to apply.';
+  box.focus();
+  box.oninput=function(){box.dataset.pending='1';};
+  if(box.dataset.pending==='1' && box.value.trim()){
+    try{
+      var data=JSON.parse(box.value);
+      if(data.SETTINGS){SETTINGS=data.SETTINGS;sv('ng-capital-v1',SETTINGS);applySettings();}
+      if(data.ACT){ACT=data.ACT;sv('ng-act-v2',ACT);}
+      if(data.RULES){RULES=data.RULES;sv('ng-rules-v3',RULES);}
+      syncPush();
+      PROJ=buildProj();renderRules();renderAll();
+      box.style.display='none';box.dataset.pending='';
+      setSyncStatus('Imported successfully.');
+    }catch(e){alert('Invalid JSON.');}
+  }
+}
 
 var INITIAL_RULES=[
   {id:"sukuk",name:"ADIB Sukuk Income",type:"income",tag:"sukuk",
@@ -564,9 +698,9 @@ function saveActual(){
   var ac=parseFloat((document.getElementById('ia').value||'').replace(/,/g,''));
   if(isNaN(ac)){alert('Enter Al-Ghina closing balance.');return;}
   ACT[selMo]={algClose:ac,totalIn:document.getElementById('ii').value||null,totalOut:document.getElementById('io').value||null,notes:document.getElementById('in').value||'',savedAt:new Date().toISOString()};
-  sv('ng-act-v2',ACT); renderAll();
+  sv('ng-act-v2',ACT); syncPush(); renderAll();
 }
-function clearActual(){delete ACT[selMo];sv('ng-act-v2',ACT);renderAll();}
+function clearActual(){delete ACT[selMo];sv('ng-act-v2',ACT);syncPush();renderAll();}
 
 // ── VARIANCE LOG ──────────────────────────────────────────────────────────
 function renderVarLog(){
@@ -677,7 +811,7 @@ function renderRules(){
 }
 function toggleRule(idx){
   RULES[idx].disabled=!RULES[idx].disabled;
-  sv('ng-rules-v3',RULES); PROJ=buildProj(); renderRules(); renderAll();
+  sv('ng-rules-v3',RULES); syncPush(); PROJ=buildProj(); renderRules(); renderAll();
 }
 
 // ── FORM ──────────────────────────────────────────────────────────────────
@@ -761,8 +895,8 @@ function saveRule(){
   };
   if(existingIdx!=='') RULES[parseInt(existingIdx)]=r; else RULES.push(r);
   sv('ng-rules-v3',RULES);
+  syncPush();
   PROJ=buildProj();
-  closeModal();
   renderRules();
   renderAll();
 }
@@ -785,6 +919,7 @@ function confirmDelete(idx,btn){
 function deleteRule(idx){
   RULES.splice(idx,1);
   sv('ng-rules-v3',RULES);
+  syncPush();
   PROJ=buildProj();
   renderRules();
   renderAll();
@@ -842,6 +977,7 @@ function saveCapital(){
   applySettings();
   syncSukukRule();
   sv('ng-rules-v3',RULES);
+  syncPush();
   PROJ=buildProj();
   var msg=document.getElementById('cs-msg');
   if(msg){msg.style.display='block';setTimeout(function(){msg.style.display='none';},2500);}
