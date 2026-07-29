@@ -556,7 +556,7 @@ function buildProj(){
   for(var i=0;i<84;i++){
     var d=new Date(START_YEAR,START_MONTH+i),mo=d.getMonth(),yi=Math.floor(i/12);
     var algOpen=bal,intIn=prev;
-    var sukuk=0,biz=0,home=0,edu=0,smr=0,zak=0,customIn=0,customOut=0,customVals={};
+    var sukuk=0,biz=0,home=0,eduMalek=0,eduAdamSchool=0,eduAdamAuc=0,smr=0,zak=0,customIn=0,customOut=0,customVals={};
 
     RULES.forEach(function(r){
       if(r.disabled||r.isComputed) return;
@@ -568,9 +568,9 @@ function buildProj(){
         case 'business': biz+=v; break;
         case 'housing': home+=v; break;
         case 'summer': smr+=v; break;
-        case 'education_malek':
-        case 'education_adam_school':
-        case 'education_adam_auc': edu+=v; break;
+        case 'education_malek': eduMalek+=v; break;
+        case 'education_adam_school': eduAdamSchool+=v; break;
+        case 'education_adam_auc': eduAdamAuc+=v; break;
         default: r.type==='income'?customIn+=v:customOut+=v;
       }
     });
@@ -578,6 +578,7 @@ function buildProj(){
     var zakRule=RULES.find(function(r){return r.tag==='zakah'&&!r.disabled;});
     if(zakRule&&mo===2) zak=Math.round((algOpen+SUKUK)*0.025);
 
+    var edu=eduMalek+eduAdamSchool+eduAdamAuc;
     var totalIn=sukuk+biz+intIn+customIn;
     var totalOut=home+edu+smr+zak+customOut;
     var lDB=Math.max(0,algOpen+intIn-totalOut);
@@ -587,7 +588,8 @@ function buildProj(){
     rows.push({i:i,mo:mo,yi:yi,yr:yr,
       lbl:MN[mo]+" '"+String(d.getFullYear()).slice(2),fullLbl:MN[mo]+" "+d.getFullYear(),
       sukuk:sukuk,biz:biz,intIn:intIn,customIn:customIn,totalIn:Math.round(totalIn),
-      home:home,edu:edu,smr:smr,zak:zak,customOut:customOut,totalOut:Math.round(totalOut),
+      home:home,edu:edu,eduMalek:eduMalek,eduAdamSchool:eduAdamSchool,eduAdamAuc:eduAdamAuc,
+      smr:smr,zak:zak,customOut:customOut,totalOut:Math.round(totalOut),
       net:Math.round(totalIn-totalOut),
       algOpen:Math.round(algOpen),algClose:Math.round(bal),total:Math.round(SUKUK+bal),
       customVals:customVals});
@@ -722,13 +724,13 @@ function renderProj(){
   var hg='<tr>'
     +'<th class="th-c th-month" rowspan="2">Month</th>'
     +'<th class="th-g" colspan="'+(4+incRules.length)+'">INCOME</th>'
-    +'<th class="th-g" colspan="'+(5+expRules.length)+'">EXPENSES</th>'
+    +'<th class="th-g" colspan="'+(7+expRules.length)+'">EXPENSES</th>'
     +'<th class="th-g" colspan="3">BALANCE</th>'
     +'</tr><tr>'
     +'<th class="th-c">Sukuk</th><th class="th-c">Business</th><th class="th-c">Interest</th>';
   incRules.forEach(function(r){hg+='<th class="th-c" style="color:var(--teal);max-width:110px;overflow:hidden;text-overflow:ellipsis" title="'+r.name+'">'+r.name+'</th>';});
   hg+='<th class="th-c" style="color:var(--grn)">Total In</th>'
-    +'<th class="th-c">Home</th><th class="th-c">Education</th><th class="th-c">Summer</th><th class="th-c">Zakah</th>';
+    +'<th class="th-c">Home</th><th class="th-c">Malek CBS</th><th class="th-c">Adam School</th><th class="th-c">Adam AUC</th><th class="th-c">Summer</th><th class="th-c">Zakah</th>';
   expRules.forEach(function(r){hg+='<th class="th-c" style="color:var(--amb);max-width:110px;overflow:hidden;text-overflow:ellipsis" title="'+r.name+'">'+r.name+'</th>';});
   hg+='<th class="th-c" style="color:var(--red)">Total Out</th>'
     +'<th class="th-c" style="color:var(--blu);border-left:1px solid var(--bdr)">Net</th>'
@@ -740,7 +742,7 @@ function renderProj(){
   var h='';
   for(var i=0;i<84;i++){
     var p=PROJ[i],r=rb[i];
-    if(p.mo===7){h+='<tr class="yr-sep"><td colspan="'+(13+incRules.length+expRules.length)+'">Year '+(p.yi+1)+' &nbsp;('+p.fullLbl+' &rarr; '+PROJ[Math.min(i+11,83)].fullLbl+')</td></tr>';}
+    if(p.mo===7){h+='<tr class="yr-sep"><td colspan="'+(15+incRules.length+expRules.length)+'">Year '+(p.yi+1)+' &nbsp;('+p.fullLbl+' &rarr; '+PROJ[Math.min(i+11,83)].fullLbl+')</td></tr>';}
     var isA=r.hasA;
     var algDisp=isA?r.actual:p.algClose;
     var totDisp=algDisp+SUKUK;
@@ -758,7 +760,9 @@ function renderProj(){
     h+='<td style="color:var(--grn)">'+f(p.totalIn)+'</td>'
       // Fixed expenses
       +'<td>'+f(p.home)+'</td>'
-      +'<td>'+(p.edu?'<span style="color:var(--amb)">'+f(p.edu)+'</span>':'<span class="dim">--</span>')+'</td>'
+      +'<td>'+(p.eduMalek?'<span style="color:var(--amb)">'+f(p.eduMalek)+'</span>':'<span class="dim">--</span>')+'</td>'
+      +'<td>'+(p.eduAdamSchool?'<span style="color:var(--amb)">'+f(p.eduAdamSchool)+'</span>':'<span class="dim">--</span>')+'</td>'
+      +'<td>'+(p.eduAdamAuc?'<span style="color:var(--amb)">'+f(p.eduAdamAuc)+'</span>':'<span class="dim">--</span>')+'</td>'
       +'<td>'+(p.smr?f(p.smr):'<span class="dim">--</span>')+'</td>'
       +'<td>'+(p.zak?'<span style="color:var(--purp)">'+f(p.zak)+'</span>':'<span class="dim">--</span>')+'</td>';
     // Custom expense columns
