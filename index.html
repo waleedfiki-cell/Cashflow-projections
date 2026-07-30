@@ -185,7 +185,7 @@ canvas{width:100%;border-radius:4px;display:block}
 <!-- PROJECTION -->
 <div id="tab-proj" class="page" style="padding:8px 0 16px">
   <div style="padding:0 12px 8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
-    <div style="font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase">7-Year Cash Flow - Aug 2026 to Jul 2033</div>
+    <div style="font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase">12-Year Cash Flow - Aug 2026 to Jul 2038</div>
   </div>
   <div class="scroll-hint">&#8596; Scroll horizontally for more columns &nbsp;|&nbsp; &#8597; Column headers stay pinned while you scroll</div>
   <div class="proj-wrap"><table class="proj-tbl" id="proj-tbl"><thead id="proj-head"></thead><tbody id="proj-body"></tbody></table></div>
@@ -340,7 +340,7 @@ function applySettings(){
   START_YEAR=SETTINGS.startYear;
   START_MONTH=SETTINGS.startMonth;
   // Rebuild month labels for dropdowns
-  ALL_MONTHS=Array.from({length:84},function(_,i){
+  ALL_MONTHS=Array.from({length:144},function(_,i){
     var d=new Date(START_YEAR,START_MONTH+i);
     return MN[d.getMonth()]+' '+d.getFullYear();
   });
@@ -367,6 +367,13 @@ function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 var ACT=ld('ng-act-v2',{});
 
 // ── CLOUD SYNC (Firebase Realtime Database) ─────────────────────────────
+// 1. Create a free project at https://console.firebase.google.com
+// 2. Build > Authentication > Sign-in method > enable "Email/Password"
+// 3. Authentication > Users > Add user (one email+password you'll use on both devices)
+// 4. Build > Realtime Database > Create database (start in "locked mode")
+// 5. Rules tab, paste:
+//      { "rules": { "users": { "$uid": { ".read": "auth.uid === $uid", ".write": "auth.uid === $uid" } } } }
+// 6. Project settings (gear icon) > General > "Your apps" > Web app (</>) > copy the config object below
 var firebaseConfig={
   apiKey:"AIzaSyCtJC02fbAJxf8e2ptLW3tQxNXiW36F5xU",
   authDomain:"cashflow-3ece7.firebaseapp.com",
@@ -421,7 +428,7 @@ function attachRemoteListener(){
       applyingRemote=true;
       if(data.SETTINGS){SETTINGS=data.SETTINGS;sv('ng-capital-v1',SETTINGS);applySettings();}
       if(data.ACT){ACT=data.ACT;sv('ng-act-v2',ACT);}
-      if(data.RULES){RULES=data.RULES;sv('ng-rules-v3',RULES);healRules();}
+      if(data.RULES){RULES=data.RULES;sv('ng-rules-v3',RULES);}
       sv('ng-sync-ts',data.ts);
       PROJ=buildProj();
       renderRules();renderAll();
@@ -448,7 +455,7 @@ function setSyncStatus(msg){
 }
 window.addEventListener('load',initSync);
 
-// ── MANUAL EXPORT / IMPORT ───────────────────────────────────────────────
+// ── MANUAL EXPORT / IMPORT (backup, or if you skip cloud sync) ──────────
 function exportData(){
   var blob={SETTINGS:SETTINGS,ACT:ACT,RULES:RULES,exportedAt:new Date().toISOString()};
   var text=JSON.stringify(blob);
@@ -461,28 +468,23 @@ function exportData(){
 }
 function importData(){
   var box=document.getElementById('sync-io-box');
-  
-  if(box.style.display==='none'||!box.style.display){
-    box.style.display='block';
-    box.value='';
-    box.placeholder='Paste exported JSON here, then click Import JSON again to apply.';
-    box.focus();
-    return;
+  box.style.display='block';
+  box.value='';
+  box.placeholder='Paste exported JSON here, then click Import again to apply.';
+  box.focus();
+  box.oninput=function(){box.dataset.pending='1';};
+  if(box.dataset.pending==='1' && box.value.trim()){
+    try{
+      var data=JSON.parse(box.value);
+      if(data.SETTINGS){SETTINGS=data.SETTINGS;sv('ng-capital-v1',SETTINGS);applySettings();}
+      if(data.ACT){ACT=data.ACT;sv('ng-act-v2',ACT);}
+      if(data.RULES){RULES=data.RULES;sv('ng-rules-v3',RULES);}
+      syncPush();
+      PROJ=buildProj();renderRules();renderAll();
+      box.style.display='none';box.dataset.pending='';
+      setSyncStatus('Imported successfully.');
+    }catch(e){alert('Invalid JSON.');}
   }
-  
-  var rawText=box.value.trim();
-  if(!rawText){alert('Please paste valid JSON text first.');return;}
-
-  try{
-    var data=JSON.parse(rawText);
-    if(data.SETTINGS){SETTINGS=data.SETTINGS;sv('ng-capital-v1',SETTINGS);applySettings();}
-    if(data.ACT){ACT=data.ACT;sv('ng-act-v2',ACT);}
-    if(data.RULES){RULES=data.RULES;sv('ng-rules-v3',RULES);healRules();}
-    syncPush();
-    PROJ=buildProj();renderRules();renderAll();
-    box.style.display='none';
-    setSyncStatus('Imported successfully.');
-  }catch(e){alert('Invalid JSON format.');}
 }
 
 var INITIAL_RULES=[
@@ -522,27 +524,24 @@ var INITIAL_RULES=[
 
 var RULES=(function(){
   var saved=ld('ng-rules-v3',null);
-  if(saved) return saved;
+  if(saved){
+    // Repair: a prior bug in saveRule() could strip the "tag" field from core
+    // rules when edited (e.g. Business, Housing, Sukuk). Restore it from id.
+    var tagById={};
+    INITIAL_RULES.forEach(function(r){tagById[r.id]=r.tag;});
+    var fixed=false;
+    saved.forEach(function(r){
+      if(r.isCore && !r.tag && tagById[r.id]){r.tag=tagById[r.id];fixed=true;}
+    });
+    if(fixed) sv('ng-rules-v3',saved);
+    return saved;
+  }
+  // Migrate: keep custom rules from v2, prepend core rules
   var old=ld('ng-rules-v2',[]);
   var custom=old.filter(function(r){return !r.isCore;});
   return INITIAL_RULES.concat(custom);
 })();
-
-// Data Heal: Restore missing tags/isCore properties on existing rules
-function healRules(){
-  if(!RULES) return;
-  INITIAL_RULES.forEach(function(initR){
-    var matched=RULES.find(function(r){return r.id===initR.id || r.name===initR.name;});
-    if(matched){
-      if(!matched.tag) matched.tag=initR.tag;
-      matched.isCore=true;
-      if(initR.isComputed) matched.isComputed=true;
-    }
-  });
-  sv('ng-rules-v3',RULES);
-}
-healRules();
-syncSukukRule();
+syncSukukRule(); // RULES now defined - safe to sync
 
 // ── CUSTOM RULE VALUE ─────────────────────────────────────────────────────
 function ruleVal(rule,i){
@@ -565,7 +564,7 @@ function ruleVal(rule,i){
 // ── BUILD PROJECTION (driven by RULES) ───────────────────────────────────
 function buildProj(){
   var rows=[],bal=ALGHINA_0,prev=0,prevSukuk=0;
-  for(var i=0;i<84;i++){
+  for(var i=0;i<144;i++){
     var d=new Date(START_YEAR,START_MONTH+i),mo=d.getMonth(),yi=Math.floor(i/12);
     var algOpen=bal,intIn=prev;
     var sukuk=prevSukuk,sukukCalc=0,biz=0,home=0,eduMalek=0,eduAdamSchool=0,eduAdamAuc=0,smr=0,zak=0,customIn=0,customOut=0,customVals={};
@@ -586,7 +585,7 @@ function buildProj(){
         default: r.type==='income'?customIn+=v:customOut+=v;
       }
     });
-
+    // Zakah computed from live balance
     var zakRule=RULES.find(function(r){return r.tag==='zakah'&&!r.disabled;});
     if(zakRule&&mo===2) zak=Math.round((algOpen+SUKUK)*0.025);
 
@@ -613,7 +612,7 @@ var PROJ=buildProj();
 // ── REBASED ───────────────────────────────────────────────────────────────
 function rebased(){
   var res=[],pC=ALGHINA_0,had=false;
-  for(var i=0;i<84;i++){
+  for(var i=0;i<144;i++){
     var p=PROJ[i],a=ACT[i];
     if(a&&a.algClose!=null){
       had=true;var ac=a.algClose;pC=ac;
@@ -652,16 +651,16 @@ function renderSums(){
   var tv=rb.filter(function(r){return r.hasA;}).reduce(function(s,r){return s+r.variance;},0);
   var li=Math.max.apply(null,Object.keys(ACT).map(Number).concat([-1]));
   document.getElementById('sums').innerHTML=[
-    ['Months Logged',nl+' / 84',nl>0?'var(--blu)':'var(--sub)'],
+    ['Months Logged',nl+' / 144',nl>0?'var(--blu)':'var(--sub)'],
     ['Total Variance',tv===0?'None':(tv>0?'+':'')+f(tv),tv>=0?'var(--grn)':'var(--red)'],
     ['Last Entry',li>=0?PROJ[li].fullLbl:'None','var(--sub)'],
-    ['Updated Yr7 End',f(rb[83].updated+SUKUK),'var(--amb)'],
+    ['Updated Yr12 End',f(rb[143].updated+SUKUK),'var(--amb)'],
   ].map(function(x){return'<div class="sum"><div class="sum-lbl">'+x[0]+'</div><div class="sum-val" style="color:'+x[2]+'">'+x[1]+'</div></div>';}).join('');
 }
 
 // ── YEAR/MONTH GRID ───────────────────────────────────────────────────────
 function renderYrTabs(){
-  document.getElementById('yr-tabs').innerHTML=Array.from({length:7},function(_,i){
+  document.getElementById('yr-tabs').innerHTML=Array.from({length:12},function(_,i){
     return'<button class="yr-tab'+(i===selYr?' on':'')+'" onclick="selYr='+i+';renderMgrid()">Yr '+(i+1)+'</button>';
   }).join('');
 }
@@ -752,9 +751,9 @@ function renderProj(){
 
   // Build rows
   var h='';
-  for(var i=0;i<84;i++){
+  for(var i=0;i<144;i++){
     var p=PROJ[i],r=rb[i];
-    if(p.mo===7){h+='<tr class="yr-sep"><td colspan="'+(15+incRules.length+expRules.length)+'">Year '+(p.yi+1)+' &nbsp;('+p.fullLbl+' &rarr; '+PROJ[Math.min(i+11,83)].fullLbl+')</td></tr>';}
+    if(p.mo===7){h+='<tr class="yr-sep"><td colspan="'+(15+incRules.length+expRules.length)+'">Year '+(p.yi+1)+' &nbsp;('+p.fullLbl+' &rarr; '+PROJ[Math.min(i+11,143)].fullLbl+')</td></tr>';}
     var isA=r.hasA;
     var algDisp=isA?r.actual:p.algClose;
     var totDisp=algDisp+SUKUK;
@@ -897,7 +896,7 @@ function saveRule(){
   var r={
     id:existing?existing.id:('rule_'+Date.now()),
     name:name,
-    tag:existing?existing.tag:null,
+    tag:existing?existing.tag:undefined,
     isCore:existing?!!existing.isCore:false,
     isComputed:existing?!!existing.isComputed:false,
     type:document.getElementById('f-type').value,
@@ -918,7 +917,6 @@ function saveRule(){
   closeModal();
   renderRules();
   renderAll();
-  if(typeof renderProj==='function') renderProj();
 }
 function confirmDelete(idx,btn){
   if(btn.dataset.armed==='1'){
@@ -955,16 +953,16 @@ function drawLine(cid,datasets){
   var allV=datasets.reduce(function(a,d){return a.concat(d.data.filter(function(v){return v!=null;}));},[]);
   var mn=Math.min.apply(null,allV),mx=Math.max.apply(null,allV),rng=mx-mn||1;
   mn-=rng*.05;mx+=rng*.05;
-  function px(i){return pad.l+i*(cw/83);} function py(v){return pad.t+ch-(v-mn)/(mx-mn)*ch;}
+  function px(i){return pad.l+i*(cw/143);} function py(v){return pad.t+ch-(v-mn)/(mx-mn)*ch;}
   ctx.strokeStyle='rgba(76,86,106,.3)';ctx.lineWidth=.5;
   for(var g=0;g<=4;g++){var gy=pad.t+g*ch/4;ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+cw,gy);ctx.stroke();ctx.fillStyle='rgba(108,122,138,.9)';ctx.font='8px system-ui';ctx.textAlign='right';ctx.fillText(Math.round((mx-(g/4)*(mx-mn))/1000)+'K',pad.l-3,gy+3);}
   if(mn<0&&mx>0){ctx.strokeStyle='rgba(191,97,106,.5)';ctx.lineWidth=.8;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(pad.l,py(0));ctx.lineTo(pad.l+cw,py(0));ctx.stroke();ctx.setLineDash([]);}
   datasets.forEach(function(d){
     ctx.strokeStyle=d.color;ctx.lineWidth=d.w||1.5;if(d.dash)ctx.setLineDash(d.dash);else ctx.setLineDash([]);
     ctx.beginPath();var first=true;
-    for(var i=0;i<84;i++){if(d.data[i]==null)continue;if(first){ctx.moveTo(px(i),py(d.data[i]));first=false;}else ctx.lineTo(px(i),py(d.data[i]));}
+    for(var i=0;i<144;i++){if(d.data[i]==null)continue;if(first){ctx.moveTo(px(i),py(d.data[i]));first=false;}else ctx.lineTo(px(i),py(d.data[i]));}
     ctx.stroke();ctx.setLineDash([]);
-    if(d.dots){for(var j=0;j<84;j++){if(d.data[j]==null)continue;ctx.fillStyle=d.color;ctx.beginPath();ctx.arc(px(j),py(d.data[j]),3,0,Math.PI*2);ctx.fill();}}
+    if(d.dots){for(var j=0;j<144;j++){if(d.data[j]==null)continue;ctx.fillStyle=d.color;ctx.beginPath();ctx.arc(px(j),py(d.data[j]),3,0,Math.PI*2);ctx.fill();}}
   });
 }
 function drawCharts(){
