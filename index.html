@@ -176,7 +176,7 @@ canvas{width:100%;border-radius:4px;display:block}
       <button class="btn btn-s" style="margin:0;font-size:10px;padding:9px" onclick="exportData()">Export JSON</button>
       <button class="btn btn-s" style="margin:0;font-size:10px;padding:9px" onclick="importData()">Import JSON</button>
     </div>
-    <textarea id="sync-io-box" rows="4" style="display:none;width:100%;margin-top:8px;background:var(--bg);border:1px solid var(--bdr);border-radius:4px;color:var(--txt);font-size:10px;font-family:monospace;padding:8px"></textarea>
+    <textarea id="sync-io-box" rows="4" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off" style="display:none;width:100%;margin-top:8px;background:var(--bg);border:1px solid var(--bdr);border-radius:4px;color:var(--txt);font-size:10px;font-family:monospace;padding:8px"></textarea>
     <div style="font-size:9px;color:var(--mute);margin-top:7px;line-height:1.5">Sign in with the same account on your phone and laptop to sync automatically. Export/Import JSON works as a manual backup either way.</div>
   </div>
 
@@ -470,7 +470,9 @@ function importData(){
   var box=document.getElementById('sync-io-box');
   if(box.dataset.pending==='1' && box.value.trim()){
     try{
-      var data=JSON.parse(box.value);
+      var raw=box.value.trim();
+      raw=raw.replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
+      var data=JSON.parse(raw);
       if(data.SETTINGS){SETTINGS=data.SETTINGS;sv('ng-capital-v1',SETTINGS);applySettings();}
       if(data.ACT){ACT=data.ACT;sv('ng-act-v2',ACT);}
       if(data.RULES){RULES=data.RULES;sv('ng-rules-v3',RULES);}
@@ -547,9 +549,18 @@ syncSukukRule(); // RULES now defined - safe to sync
 
 // ── CUSTOM RULE VALUE ─────────────────────────────────────────────────────
 function ruleVal(rule,i){
+  var d=new Date(START_YEAR,START_MONTH+i),mo=d.getMonth(),yi=Math.floor(i/12);
+  if(rule.rec==='annual'){
+    var thisYr=d.getFullYear();
+    if(rule.start!=null){var sYr=new Date(START_YEAR,START_MONTH+rule.start).getFullYear();if(thisYr<sYr)return 0;}
+    if(rule.end!=null){var eYr=new Date(START_YEAR,START_MONTH+rule.end).getFullYear();if(thisYr>eYr)return 0;}
+    if(mo!==(rule.annMo||0)) return 0;
+    var amtA=rule.amount*Math.pow(1+(rule.changeRate||0)/100,yi);
+    if(rule.cap) amtA=Math.min(amtA,rule.cap);
+    return Math.round(amtA);
+  }
   if(i<(rule.start||0)) return 0;
   if(rule.end!=null&&i>rule.end) return 0;
-  var d=new Date(START_YEAR,START_MONTH+i),mo=d.getMonth(),yi=Math.floor(i/12);
   var amt=rule.amount*Math.pow(1+(rule.changeRate||0)/100,yi);
   if(rule.cap) amt=Math.min(amt,rule.cap);
   amt=Math.round(amt);
@@ -557,7 +568,6 @@ function ruleVal(rule,i){
     case 'monthly': return amt;
     case 'quarterly': return ([0,3,6,9].indexOf(mo)>=0)?amt:0;
     case 'specific': return (rule.months||[]).indexOf(mo)>=0?amt:0;
-    case 'annual': return mo===(rule.annMo||0)?amt:0;
     case 'one_time': return i===(rule.start||0)?amt:0;
   }
   return 0;
