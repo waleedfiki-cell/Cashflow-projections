@@ -434,7 +434,9 @@ function attachRemoteListener(){
       renderRules();renderAll();
       if(typeof drawCharts==='function')try{drawCharts();}catch(e){}
       applyingRemote=false;
-      setSyncStatus('Synced just now (from other device).');
+      setSyncStatus('Synced just now.');
+    } else if(data.ts){
+      sv('ng-sync-ts',data.ts); // stay current even when no local change was needed
     }
   });
 }
@@ -442,9 +444,7 @@ function syncPush(){
   if(!fbUser||!fbDb||applyingRemote)return;
   clearTimeout(syncTimer);
   syncTimer=setTimeout(function(){
-    var ts=Date.now();
-    sv('ng-sync-ts',ts);
-    fbDb.ref('users/'+fbUser.uid+'/ngdata').set({SETTINGS:SETTINGS,ACT:ACT,RULES:RULES,ts:ts})
+    fbDb.ref('users/'+fbUser.uid+'/ngdata').set({SETTINGS:SETTINGS,ACT:ACT,RULES:RULES,ts:firebase.database.ServerValue.TIMESTAMP})
       .then(function(){setSyncStatus('Synced just now.');})
       .catch(function(err){setSyncStatus('Sync failed: '+err.message);});
   },700);
