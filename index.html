@@ -468,11 +468,6 @@ function exportData(){
 }
 function importData(){
   var box=document.getElementById('sync-io-box');
-  box.style.display='block';
-  box.value='';
-  box.placeholder='Paste exported JSON here, then click Import again to apply.';
-  box.focus();
-  box.oninput=function(){box.dataset.pending='1';};
   if(box.dataset.pending==='1' && box.value.trim()){
     try{
       var data=JSON.parse(box.value);
@@ -484,7 +479,14 @@ function importData(){
       box.style.display='none';box.dataset.pending='';
       setSyncStatus('Imported successfully.');
     }catch(e){alert('Invalid JSON.');}
+    return;
   }
+  box.style.display='block';
+  box.value='';
+  box.placeholder='Paste exported JSON here, then click Import again to apply.';
+  box.focus();
+  box.dataset.pending='';
+  box.oninput=function(){box.dataset.pending='1';};
 }
 
 var INITIAL_RULES=[
