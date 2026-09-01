@@ -611,7 +611,7 @@ function buildProj(){
     var totalIn=sukuk+biz+intIn+customIn+sukukMaturityIn;
     var totalOut=home+edu+smr+zak+customOut;
     var lDB=Math.max(0,algOpen+intIn-totalOut);
-    var ALGHINA_TIER_THRESHOLD=10000000, ALGHINA_LOW_RATE=0.16;
+    var ALGHINA_TIER_THRESHOLD=10000000, ALGHINA_LOW_RATE=0.15;
     var effAlghRate = (lDB>=ALGHINA_TIER_THRESHOLD) ? ALGH_RATE : ALGHINA_LOW_RATE;
     var intCalc=Math.round(lDB*effAlghRate/12);
     bal=algOpen+totalIn-totalOut; prev=intCalc; prevSukuk=sukukCalc;
