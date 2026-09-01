@@ -355,10 +355,6 @@ function syncSukukRule(){
 // ── CONSTANTS (derived from SETTINGS) ─────────────────────────────────────
 var MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 var SUKUK,SUKUK_MTH,ALGHINA_0,ALGH_RATE,START_YEAR,START_MONTH;
-// Temporary investment account: funds sit here at TEMP_RATE (12.5%, daily-calc/monthly-paid)
-// until they migrate into the Al-Ghina savings account (17.5%) on MIGRATION_DATE.
-var TEMP_RATE=0.125;
-var MIGRATION_DATE=new Date(2026,8,1); // 1 Sep 2026
 applySettings(); // MN is defined above so ALL_MONTHS builds correctly
 var MALEK_SEM=Math.round((10070)*55*(1.03));
 var AUC_INST=Math.round(9000*50*(1.03));
@@ -434,8 +430,6 @@ function attachRemoteListener(){
       if(data.ACT){ACT=data.ACT;sv('ng-act-v2',ACT);}
       if(data.RULES){RULES=data.RULES;sv('ng-rules-v3',RULES);}
       sv('ng-sync-ts',data.ts);
-      applyMurabahaMigration();
-      if(applyAug2026Update()){ syncSukukRule(); syncPush(); }
       PROJ=buildProj();
       renderRules();renderAll();
       if(typeof drawCharts==='function')try{drawCharts();}catch(e){}
@@ -532,66 +526,6 @@ var INITIAL_RULES=[
    notes:"2.5% x (Al-Ghina + E£6M Sukuk) each March - auto-computed"},
 ];
 
-function applyMurabahaMigration(){
-  // Superseded by applyAug2026Update() below, which reflects the final confirmed
-  // terms (2.5M Sukuk as separate own funds, 13.78%/6mo Murabaha, temp account, pension).
-  // Left as a no-op so any old saved data that still has the stale 'murabaha_installment'
-  // rule gets cleaned up by applyAug2026Update()'s filter step.
-  return false;
-}
-function applyAug2026Update(){
-  if(RULES.some(function(r){return r.id==='murabaha_installment_v2';})) return false; // already applied
-
-  // Undo the old (superseded) delta-based migration if it ran on this device previously
-  if(RULES.some(function(r){return r.id==='murabaha_installment';})){
-    SETTINGS.alghina=(SETTINGS.alghina||0)+2500000;
-    SETTINGS.sukuk=(SETTINGS.sukuk||0)-2500000;
-  }
-
-  // Actual position as of 6 Aug 2026:
-  // - Sukuk: 2.5M, separate own funds (unrelated to the Murabaha amount), effective 6 Aug
-  // - Temporary investment account: 7,967,000 + 330,000 = 8,297,000, earning 12.5%
-  //   (daily-calc, monthly-paid) until it migrates into Al-Ghina savings on 1 Sep 2026,
-  //   at which point it starts earning 17.5% (see TEMP_RATE/MIGRATION_DATE above)
-  SETTINGS.sukuk=2500000;
-  SETTINGS.sukukRate=17.5;
-  SETTINGS.alghina=8297000;
-  SETTINGS.alghinaRate=17.5;
-  sv('ng-capital-v1',SETTINGS);
-  applySettings();
-  syncSukukRule();
-
-  // Remove any stale murabaha rules from the earlier (13.48%/36mo) estimate
-  RULES=RULES.filter(function(r){return r.id!=='murabaha_loan_proceeds'&&r.id!=='murabaha_installment';});
-
-  // Murabaha: 2.375M, 13.78% flat non-diminishing over 6 months, 1% admin fee
-  // deducted upfront from proceeds. Net received = 2,375,000 - 23,750 = 2,351,250.
-  // Repaid as 6 equal blended installments: (2,375,000 + 2,375,000*13.78%*0.5) / 6 = 423,106.
-  // Assumed disbursed ~13 Aug 2026 (this month) with the first installment the month after (Sep).
-  RULES.push({
-    id:'murabaha_loan_proceeds_v2', name:'Murabaha Net Proceeds (one-time)',
-    isCore:false, isComputed:false, type:'income', amount:2351250,
-    rec:'one_time', months:[], annMo:0, start:0, end:null, changeRate:0, cap:null,
-    notes:'2.375M Murabaha; 1% admin fee (23,750) deducted upfront. Expected ~13 Aug 2026.'
-  });
-  RULES.push({
-    id:'murabaha_installment_v2', name:'Murabaha Installment (6mo, flat 13.78%)',
-    isCore:false, isComputed:false, type:'expense', amount:423106,
-    rec:'monthly', months:[], annMo:0, start:1, end:6, changeRate:0, cap:null,
-    notes:'2.375M @13.78% flat/6mo = 2,538,637.5 total (principal+interest) / 6 installments. Assumed to start Sep 2026 (month after disbursement) - flag if installments actually start in Aug.'
-  });
-
-  // Pension: 1.6M transferred mid-Aug 2026 into the same ADIB bucket (temp investment account)
-  RULES.push({
-    id:'pension_transfer_2026', name:'Pension Transfer (one-time)',
-    isCore:false, isComputed:false, type:'income', amount:1600000,
-    rec:'one_time', months:[], annMo:0, start:0, end:null, changeRate:0, cap:null,
-    notes:'1.6M pension moved into the same ADIB bucket account, ~mid-Aug 2026.'
-  });
-
-  sv('ng-rules-v3',RULES);
-  return true;
-}
 var RULES=(function(){
   var saved=ld('ng-rules-v3',null);
   if(saved){
@@ -612,12 +546,13 @@ var RULES=(function(){
   return INITIAL_RULES.concat(custom);
 })();
 syncSukukRule(); // RULES now defined - safe to sync
-applyMurabahaMigration();
-if(applyAug2026Update()){ syncSukukRule(); }
 
 // ── CUSTOM RULE VALUE ─────────────────────────────────────────────────────
 function ruleVal(rule,i){
-  var d=new Date(START_YEAR,START_MONTH+i),mo=d.getMonth(),yi=Math.floor(i/12);
+  var d=new Date(START_YEAR,START_MONTH+i),mo=d.getMonth(),yr=d.getFullYear();
+  var GROWTH_ANCHOR_MONTH=3; // April - annual rate increases (changeRate) land here, independent of table start
+  var yi=(yr-START_YEAR)-(mo>=GROWTH_ANCHOR_MONTH?0:1);
+  if(yi<0) yi=0;
   if(rule.rec==='annual'){
     var thisYr=d.getFullYear();
     if(rule.start!=null){var sYr=new Date(START_YEAR,START_MONTH+rule.start).getFullYear();if(thisYr<sYr)return 0;}
@@ -644,9 +579,11 @@ function ruleVal(rule,i){
 // ── BUILD PROJECTION (driven by RULES) ───────────────────────────────────
 function buildProj(){
   var rows=[],bal=ALGHINA_0,prev=0,prevSukuk=0;
+  var SUKUK_MATURITY_INDEX=36; // 3 years from table start - Sukuk principal moves to Alghina here
   for(var i=0;i<144;i++){
     var d=new Date(START_YEAR,START_MONTH+i),mo=d.getMonth(),yi=Math.floor(i/12);
     var algOpen=bal,intIn=prev;
+    var sukukPrincipalRemaining=(i<SUKUK_MATURITY_INDEX)?SUKUK:0;
     var sukuk=prevSukuk,sukukCalc=0,biz=0,home=0,eduMalek=0,eduAdamSchool=0,eduAdamAuc=0,smr=0,zak=0,customIn=0,customOut=0,customVals={};
 
     RULES.forEach(function(r){
@@ -655,7 +592,7 @@ function buildProj(){
       customVals[r.id]=v;
       if(!v) return;
       switch(r.tag){
-        case 'sukuk': sukukCalc+=v; break;
+        case 'sukuk': if(i<=SUKUK_MATURITY_INDEX) sukukCalc+=v; break; // coupon stops once principal has matured out
         case 'business': biz+=v; break;
         case 'housing': home+=v; break;
         case 'summer': smr+=v; break;
@@ -665,16 +602,18 @@ function buildProj(){
         default: r.type==='income'?customIn+=v:customOut+=v;
       }
     });
+    var sukukMaturityIn = (i===SUKUK_MATURITY_INDEX) ? SUKUK : 0; // one-time principal transfer into Alghina
     // Zakah computed from live balance
     var zakRule=RULES.find(function(r){return r.tag==='zakah'&&!r.disabled;});
-    if(zakRule&&mo===2) zak=Math.round((algOpen+SUKUK)*0.025);
+    if(zakRule&&mo===2) zak=Math.round((algOpen+sukukPrincipalRemaining)*0.025);
 
     var edu=eduMalek+eduAdamSchool+eduAdamAuc;
-    var totalIn=sukuk+biz+intIn+customIn;
+    var totalIn=sukuk+biz+intIn+customIn+sukukMaturityIn;
     var totalOut=home+edu+smr+zak+customOut;
     var lDB=Math.max(0,algOpen+intIn-totalOut);
-    var rateThisMonth=(d<MIGRATION_DATE)?TEMP_RATE:ALGH_RATE;
-    var intCalc=Math.round(lDB*rateThisMonth/12);
+    var ALGHINA_TIER_THRESHOLD=10000000, ALGHINA_LOW_RATE=0.16;
+    var effAlghRate = (lDB>=ALGHINA_TIER_THRESHOLD) ? ALGH_RATE : ALGHINA_LOW_RATE;
+    var intCalc=Math.round(lDB*effAlghRate/12);
     bal=algOpen+totalIn-totalOut; prev=intCalc; prevSukuk=sukukCalc;
     var yr=d.getFullYear();
     rows.push({i:i,mo:mo,yi:yi,yr:yr,
@@ -683,7 +622,7 @@ function buildProj(){
       home:home,edu:edu,eduMalek:eduMalek,eduAdamSchool:eduAdamSchool,eduAdamAuc:eduAdamAuc,
       smr:smr,zak:zak,customOut:customOut,totalOut:Math.round(totalOut),
       net:Math.round(totalIn-totalOut),
-      algOpen:Math.round(algOpen),algClose:Math.round(bal),total:Math.round(SUKUK+bal),
+      algOpen:Math.round(algOpen),algClose:Math.round(bal),total:Math.round(sukukPrincipalRemaining+bal),
       customVals:customVals});
   }
   return rows;
