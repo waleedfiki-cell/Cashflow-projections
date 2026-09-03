@@ -623,6 +623,7 @@ function buildProj(){
       smr:smr,zak:zak,customOut:customOut,totalOut:Math.round(totalOut),
       net:Math.round(totalIn-totalOut),
       algOpen:Math.round(algOpen),algClose:Math.round(bal),total:Math.round(sukukPrincipalRemaining+bal),
+      sukukPrincipalRemaining:sukukPrincipalRemaining,
       customVals:customVals});
   }
   return rows;
@@ -776,7 +777,7 @@ function renderProj(){
     if(p.mo===7){h+='<tr class="yr-sep"><td colspan="'+(15+incRules.length+expRules.length)+'">Year '+(p.yi+1)+' &nbsp;('+p.fullLbl+' &rarr; '+PROJ[Math.min(i+11,143)].fullLbl+')</td></tr>';}
     var isA=r.hasA;
     var algDisp=isA?r.actual:p.algClose;
-    var totDisp=algDisp+SUKUK;
+    var totDisp=algDisp+p.sukukPrincipalRemaining;
     h+='<tr'+(isA?' class="actual-row"':'')+'>'
       +'<td>'+p.fullLbl+'</td>'
       // Fixed income
