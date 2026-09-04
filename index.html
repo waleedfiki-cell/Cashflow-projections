@@ -328,8 +328,8 @@ canvas{width:100%;border-radius:4px;display:block}
 <script>
 // ── SETTINGS (editable capital config) ────────────────────────────────────
 var SETTINGS=ld('ng-capital-v1',{
-  sukuk:6000000, sukukRate:17.5,
-  alghina:6000000, alghinaRate:17.5,
+  sukuk:2500000, sukukRate:17.5,
+  alghina:8300000.000000001, alghinaRate:17.5,
   startYear:2026, startMonth:7   // 7=August (0-indexed)
 });
 function applySettings(){
@@ -492,38 +492,20 @@ function importData(){
 }
 
 var INITIAL_RULES=[
-  {id:"sukuk",name:"ADIB Sukuk Income",type:"income",tag:"sukuk",
-   amount:87500,rec:"monthly",months:[],annMo:0,start:0,end:null,
-   changeRate:0,cap:null,isCore:true,disabled:false,
-   notes:"E£6M at 17.5% p.a. fixed = E£87,500/month"},
-  {id:"business",name:"Business Income (NG Fitness)",type:"income",tag:"business",
-   amount:300000,rec:"quarterly",months:[],annMo:0,start:0,end:null,
-   changeRate:10,cap:null,isCore:true,disabled:false,
-   notes:"Quarterly Jan/Apr/Jul/Oct, +10% p.a. uncapped"},
-  {id:"housing",name:"Home & Living Expenses",type:"expense",tag:"housing",
-   amount:80000,rec:"monthly",months:[],annMo:0,start:0,end:null,
-   changeRate:10,cap:120000,isCore:true,disabled:false,
-   notes:"Monthly +10% p.a., capped at E£120K"},
-  {id:"summer",name:"Summer House (Quarterly)",type:"expense",tag:"summer",
-   amount:26700,rec:"quarterly",months:[],annMo:0,start:0,end:23,
-   changeRate:0,cap:null,isCore:true,disabled:false,
-   notes:"Jan/Apr/Jul/Oct until Jul 2028 (i<=23)"},
-  {id:"malek",name:"Malek Tuition - Carl Benz",type:"expense",tag:"education_malek",
-   amount:570466,rec:"specific",months:[7,1],annMo:0,start:5,end:35,
-   changeRate:0,cap:null,isCore:true,disabled:false,
-   notes:"EUR 10,070 x E£55 x 1.03 per semester, Feb/Aug Yrs 1-3"},
-  {id:"adam_school",name:"Adam School Fees",type:"expense",tag:"education_adam_school",
-   amount:83333,rec:"specific",months:[6,10,1],annMo:0,start:0,end:30,
-   changeRate:0,cap:null,isCore:true,disabled:false,
-   notes:"E£250K/yr in 3 installments Jul/Nov/Feb, Years 1-3"},
-  {id:"adam_auc",name:"Adam AUC Tuition",type:"expense",tag:"education_adam_auc",
-   amount:463500,rec:"specific",months:[7,1],annMo:0,start:35,end:83,
-   changeRate:0,cap:null,isCore:true,disabled:false,
-   notes:"USD 9K x E£50 x 1.03 per semester, Aug/Feb Yrs 4-7"},
-  {id:"zakah",name:"Zakah (Annual - March)",type:"expense",tag:"zakah",
-   amount:null,rec:"annual",months:[],annMo:2,start:0,end:null,
-   changeRate:0,cap:null,isCore:true,disabled:false,isComputed:true,
-   notes:"2.5% x (Al-Ghina + E£6M Sukuk) each March - auto-computed"},
+  {id:"sukuk",name:"ADIB Sukuk Income",type:"income",tag:"sukuk",amount:36458,rec:"monthly",months:[],annMo:0,start:0,end:null,changeRate:0,cap:null,isCore:true,disabled:false},
+  {id:"business",name:"Business Income (NG Fitness)",type:"income",tag:"business",amount:300000,rec:"quarterly",months:[],annMo:0,start:0,end:null,changeRate:10,cap:null,isCore:true,disabled:false},
+  {id:"housing",name:"Home & Living Expenses",tag:"housing",isCore:true,isComputed:false,type:"expense",amount:100000,rec:"monthly",months:[],annMo:0,start:0,end:null,changeRate:10,cap:120000},
+  {id:"summer",name:"Summer House (Quarterly)",type:"expense",tag:"summer",amount:26700,rec:"quarterly",months:[],annMo:0,start:0,end:24,changeRate:0,cap:null,isCore:true,disabled:false},
+  {id:"malek",name:"Malek Tuition - Carl Benz",type:"expense",tag:"education_malek",amount:570466,rec:"specific",months:[7,1],annMo:0,start:6,end:36,changeRate:0,cap:null,isCore:true,disabled:false},
+  {id:"adam_school",name:"Adam School Fees",type:"expense",tag:"education_adam_school",amount:83333,rec:"specific",months:[6,10,1],annMo:0,start:0,end:31,changeRate:0,cap:null,isCore:true,disabled:false},
+  {id:"adam_auc",name:"Adam AUC Tuition",type:"expense",tag:"education_adam_auc",amount:463500,rec:"specific",months:[7,1],annMo:0,start:36,end:84,changeRate:0,cap:null,isCore:true,disabled:false},
+  {id:"zakah",name:"Zakah (Annual - March)",type:"expense",tag:"zakah",amount:null,rec:"annual",months:[],annMo:2,start:0,end:null,changeRate:0,cap:null,isCore:true,disabled:false,isComputed:true},
+  {id:"murabaha_loan_proceeds_v2",name:"Murabaha Net Proceeds (one-time)",isCore:false,isComputed:false,type:"income",amount:2351250,rec:"one_time",months:[],annMo:0,start:0,end:null,changeRate:0,cap:null},
+  {id:"murabaha_installment_v2",name:"Murabaha Installment (6mo, flat 13.78%)",isCore:false,isComputed:false,type:"expense",amount:423106,rec:"monthly",months:[],annMo:0,start:1,end:6,changeRate:0,cap:null},
+  {id:"pension_transfer_2026",name:"Pension Transfer (one-time)",isCore:false,isComputed:false,type:"income",amount:1500000,rec:"one_time",months:[],annMo:0,start:2,end:null,changeRate:0,cap:null},
+  {id:"rule_1787586906289",name:"Louka blocked",isCore:false,isComputed:false,type:"expense",amount:700000,rec:"annual",months:[],annMo:7,start:12,end:24,changeRate:0,cap:null,notes:""},
+  {id:"rule_1788256286200",name:"Others",isCore:false,isComputed:false,type:"expense",amount:500000,rec:"one_time",months:[],annMo:0,start:2,end:null,changeRate:0,cap:null,notes:"Louka semester 1 remaining pay and NG advanced revenue I already have in my account"},
+  {id:"rule_1788256586479",name:"Furniture",isCore:false,isComputed:false,type:"expense",amount:100000,rec:"monthly",months:[],annMo:0,start:3,end:6,changeRate:0,cap:null,notes:""},
 ];
 
 var RULES=(function(){
