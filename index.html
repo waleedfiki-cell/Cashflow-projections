@@ -559,7 +559,7 @@ function ruleVal(rule,i){
 }
 
 // ── BUILD PROJECTION (driven by RULES) ───────────────────────────────────
-function buildProj(){
+function buildProj(ignoreAct){
   var rows=[],bal=ALGHINA_0,prev=0,prevSukuk=0;
   var SUKUK_MATURITY_INDEX=36; // 3 years from table start - Sukuk principal moves to Alghina here
   for(var i=0;i<144;i++){
@@ -596,15 +596,26 @@ function buildProj(){
     var ALGHINA_TIER_THRESHOLD=10000000, ALGHINA_LOW_RATE=0.15;
     var effAlghRate = (lDB>=ALGHINA_TIER_THRESHOLD) ? ALGH_RATE : ALGHINA_LOW_RATE;
     var intCalc=Math.round(lDB*effAlghRate/12);
-    bal=algOpen+totalIn-totalOut; prev=intCalc; prevSukuk=sukukCalc;
+    bal=algOpen+totalIn-totalOut;
+    var modelClose=bal, actualApplied=false;
+    // Manual actual closing balance overrides the model; every following month (interest, Zakah, balances) rolls from it
+    var aa=(!ignoreAct&&ACT[i]&&ACT[i].algClose!=null&&!isNaN(Number(ACT[i].algClose)))?Number(ACT[i].algClose):null;
+    if(aa!==null){
+      bal=aa; actualApplied=true;
+      // same convention as the model: interest base = balance after interest-in and outflows, before other income
+      lDB=Math.max(0,bal-(totalIn-intIn));
+      effAlghRate=(lDB>=ALGHINA_TIER_THRESHOLD)?ALGH_RATE:ALGHINA_LOW_RATE;
+      intCalc=Math.round(lDB*effAlghRate/12);
+    }
+    prev=intCalc; prevSukuk=sukukCalc;
     var yr=d.getFullYear();
     rows.push({i:i,mo:mo,yi:yi,yr:yr,
       lbl:MN[mo]+" '"+String(d.getFullYear()).slice(2),fullLbl:MN[mo]+" "+d.getFullYear(),
       sukuk:sukuk,biz:biz,intIn:intIn,customIn:customIn,totalIn:Math.round(totalIn),
       home:home,edu:edu,eduMalek:eduMalek,eduAdamSchool:eduAdamSchool,eduAdamAuc:eduAdamAuc,
       smr:smr,zak:zak,customOut:customOut,totalOut:Math.round(totalOut),
-      net:Math.round(totalIn-totalOut),
-      algOpen:Math.round(algOpen),algClose:Math.round(bal),total:Math.round(sukukPrincipalRemaining+bal),
+      net:Math.round(bal-algOpen),
+      algOpen:Math.round(algOpen),algClose:Math.round(bal),modelClose:Math.round(modelClose),actualApplied:actualApplied,total:Math.round(sukukPrincipalRemaining+bal),
       sukukPrincipalRemaining:sukukPrincipalRemaining,
       customVals:customVals});
   }
@@ -614,18 +625,15 @@ var PROJ=buildProj();
 
 // ── REBASED ───────────────────────────────────────────────────────────────
 function rebased(){
-  var res=[],pC=ALGHINA_0,had=false;
+  // PROJ already rolls forward from any manual actuals; BASE is the original plan with no actuals
+  var BASE=buildProj(true),res=[];
   for(var i=0;i<144;i++){
     var p=PROJ[i],a=ACT[i];
     if(a&&a.algClose!=null){
-      had=true;var ac=a.algClose;pC=ac;
-      res.push({i:i,proj:p.algClose,actual:Math.round(ac),updated:Math.round(ac),hasA:true,variance:Math.round(ac-p.algClose)});
-    } else if(had){
-      var delta=p.algClose-(i>0?PROJ[i-1].algClose:ALGHINA_0);
-      var nc=pC+delta;pC=nc;
-      res.push({i:i,proj:p.algClose,actual:null,updated:Math.round(nc),hasA:false,variance:null});
+      var ac=Number(a.algClose);
+      res.push({i:i,base:BASE[i].algClose,proj:p.modelClose,actual:Math.round(ac),updated:Math.round(ac),hasA:true,variance:Math.round(ac-p.modelClose)});
     } else {
-      res.push({i:i,proj:p.algClose,actual:null,updated:p.algClose,hasA:false,variance:null});
+      res.push({i:i,base:BASE[i].algClose,proj:p.algClose,actual:null,updated:p.algClose,hasA:false,variance:null});
     }
   }
   return res;
@@ -688,13 +696,13 @@ function renderInput(){
   if(selMo===null){document.getElementById('inp-content').innerHTML='<div style="color:var(--sub);text-align:center;padding:24px 0;font-size:13px">Select a month above</div>';return;}
   var p=PROJ[selMo],a=ACT[selMo]||{};
   var hasVal=a.algClose!=null;
-  var varPrev=hasVal?Math.round(a.algClose-p.algClose):null;
+  var varPrev=hasVal?Math.round(a.algClose-p.modelClose):null;
   document.getElementById('inp-content').innerHTML=
     '<div style="display:flex;justify-content:space-between;margin-bottom:10px">'
       +'<div><div style="font-size:9px;color:var(--purp);text-transform:uppercase;letter-spacing:2px">Entering Actuals</div>'
       +'<div style="font-size:16px;font-weight:700">'+p.fullLbl+'</div></div>'
       +'<div style="text-align:right"><div style="font-size:9px;color:var(--sub)">Proj closing</div>'
-      +'<div style="font-size:14px;font-family:monospace;color:var(--blu)">'+f(p.algClose)+'</div></div>'
+      +'<div style="font-size:14px;font-family:monospace;color:var(--blu)">'+f(p.modelClose)+'</div></div>'
     +'</div>'
     +'<div style="background:var(--surf2);border-radius:5px;padding:8px 10px;margin-bottom:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;font-size:10px">'
       +'<div><div style="font-size:8px;color:var(--sub);text-transform:uppercase;margin-bottom:1px">Total In</div><div style="color:var(--grn);font-family:monospace">'+f(p.totalIn)+'</div></div>'
@@ -758,7 +766,7 @@ function renderProj(){
     var p=PROJ[i],r=rb[i];
     if(p.mo===7){h+='<tr class="yr-sep"><td colspan="'+(15+incRules.length+expRules.length)+'">Year '+(p.yi+1)+' &nbsp;('+p.fullLbl+' &rarr; '+PROJ[Math.min(i+11,143)].fullLbl+')</td></tr>';}
     var isA=r.hasA;
-    var algDisp=isA?r.actual:p.algClose;
+    var algDisp=r.updated; // rebased: actual if entered, otherwise projection shifted from latest actual
     var totDisp=algDisp+p.sukukPrincipalRemaining;
     h+='<tr'+(isA?' class="actual-row"':'')+'>'
       +'<td>'+p.fullLbl+'</td>'
@@ -970,7 +978,7 @@ function drawLine(cid,datasets){
 }
 function drawCharts(){
   var rb=rebased();
-  drawLine('chart',[{data:rb.map(function(r){return r.proj/1000;}),color:'#88C0D0',dash:[5,3]},{data:rb.map(function(r){return r.updated/1000;}),color:'#B48EAD'},{data:rb.map(function(r){return r.hasA?r.actual/1000:null;}),color:'#A3BE8C',dots:true,w:0}]);
+  drawLine('chart',[{data:rb.map(function(r){return r.base/1000;}),color:'#88C0D0',dash:[5,3]},{data:rb.map(function(r){return r.updated/1000;}),color:'#B48EAD'},{data:rb.map(function(r){return r.hasA?r.actual/1000:null;}),color:'#A3BE8C',dots:true,w:0}]);
   drawLine('chart2',[{data:rb.map(function(r){return(r.updated+SUKUK)/1000;}),color:'#EBCB8B',w:2}]);
 }
 
